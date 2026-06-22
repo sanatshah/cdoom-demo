@@ -1,0 +1,10 @@
+[package]
+name = "cdoom-verify"
+description = "Baseline correctness checks for the cdoom Rust migration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+cdoom-core = { path = "../cdoom-core" }

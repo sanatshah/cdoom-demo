@@ -1,0 +1,12 @@
+[package]
+name = "cdoom-sys"
+description = "Generated and hand-written C bindings for Chocolate Doom (future bindgen home)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+cdoom-core = { path = "../cdoom-core" }

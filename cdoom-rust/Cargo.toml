@@ -1,0 +1,12 @@
+[workspace]
+resolver = "2"
+members = ["cdoom-core", "cdoom-sys", "cdoom-verify"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "GPL-2.0-or-later"
+repository = "https://github.com/chocolate-doom/chocolate-doom"
+
+[workspace.lints.rust]
+unsafe_code = "warn"

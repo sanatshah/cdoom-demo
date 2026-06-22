@@ -148,6 +148,9 @@ set(SOURCE_FILES ${COMMON_SOURCE_FILES} ${GAME_SOURCE_FILES})
 set(SOURCE_FILES_WITH_DEH ${SOURCE_FILES} ${DEHACKED_SOURCE_FILES})
 
 set(EXTRA_LIBS ${SDL_LINK_LIBS} textscreen pcsound opl)
+if(ENABLE_CDOOM_RUST)
+    list(APPEND EXTRA_LIBS cdoom_rust)
+endif()
 if(SampleRate_FOUND)
     list(APPEND EXTRA_LIBS SampleRate::samplerate)
 endif()
@@ -219,6 +222,13 @@ set_target_properties("${PROGRAM_PREFIX}strife" PROPERTIES COMPILE_FLAGS "${SDL_
 if(MSVC)
     set_target_properties("${PROGRAM_PREFIX}strife" PROPERTIES
                           LINK_FLAGS "/MANIFEST:NO")
+endif()
+
+if(ENABLE_CDOOM_RUST)
+    cdoom_rust_link("${PROGRAM_PREFIX}doom")
+    cdoom_rust_link("${PROGRAM_PREFIX}heretic")
+    cdoom_rust_link("${PROGRAM_PREFIX}hexen")
+    cdoom_rust_link("${PROGRAM_PREFIX}strife")
 endif()
 
 # Source files needed for chocolate-setup:

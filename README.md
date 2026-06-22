@@ -36,9 +36,20 @@ Local [Chocolate Doom](https://github.com/chocolate-doom/chocolate-doom) setup b
 ```
 cdoom/
   chocolate-doom/   # vendored upstream Chocolate Doom source
+  cdoom-rust/       # Rust migration workspace (strangler-fig graft)
   wads/             # Freedoom WADs, auto-downloaded
   build.sh          # installs deps + compiles
   run.sh            # ensures WAD present, launches the game
+  scripts/          # baseline verification for the Rust migration
+```
+
+## Rust migration (Step 0)
+
+The `cdoom-rust/` workspace builds a static library linked into Chocolate Doom. See [cdoom-rust/README.md](cdoom-rust/README.md).
+
+```bash
+./chocolate-doom/build/src/chocolate-doom -cdoom-rust-info   # linked Rust version
+./scripts/verify-baseline.sh                                 # migration oracle
 ```
 
 ## Notes

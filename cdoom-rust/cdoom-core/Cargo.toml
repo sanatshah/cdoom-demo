@@ -1,0 +1,12 @@
+[package]
+name = "cdoom-core"
+description = "Rust migration core for cdoom — FFI facade and future engine modules"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["staticlib", "rlib"]
+
+[build-dependencies]
+cbindgen = "0.28"

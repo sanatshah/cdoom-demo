@@ -29,6 +29,10 @@
 #include "m_argv.h"
 #include "m_misc.h"
 
+#ifdef ENABLE_CDOOM_RUST
+#include "cdoom_rust.h"
+#endif
+
 
 //
 // D_DoomMain()
@@ -58,6 +62,20 @@ int main(int argc, char **argv)
         puts(PACKAGE_STRING);
         exit(0);
     }
+
+#ifdef ENABLE_CDOOM_RUST
+    //!
+    // Print the linked cdoom-rust library version and exit.
+    //
+    if (M_ParmExists("-cdoom-rust-info")) {
+        if (cdoom_rust_init() != 0) {
+            fputs("cdoom_rust_init failed\n", stderr);
+            exit(1);
+        }
+        puts(cdoom_rust_version());
+        exit(0);
+    }
+#endif
 
 #if defined(_WIN32)
     // compose a proper command line from loose file paths passed as arguments
