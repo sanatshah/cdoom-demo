@@ -46,7 +46,7 @@ add_dependencies(cdoom_rust_probe cdoom_rust_build)
 function(cdoom_rust_link target)
     add_dependencies("${target}" cdoom_rust_build)
     target_include_directories("${target}" PRIVATE "${CDOOM_RUST_DIR}/include")
-    target_compile_definitions("${target}" PRIVATE ENABLE_CDOOM_RUST=1)
+    target_compile_definitions("${target}" PRIVATE ENABLE_CDOOM_RUST=1 USE_RUST_WAD=1)
 endfunction()
 
 message(STATUS "cdoom-rust: ${CDOOM_RUST_LIB}")

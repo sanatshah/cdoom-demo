@@ -33,6 +33,15 @@ const char *cdoom_rust_version(void);  // static string, do not free
 int cdoom_rust_init(void);             // reserved for later phases
 ```
 
+## WAD module (Step 1)
+
+When `ENABLE_CDOOM_RUST` is on, Chocolate Doom defines `USE_RUST_WAD` and links
+the Rust implementation of `w_wad.c` from `cdoom-core/src/wad/`. The C translation
+unit is compiled out; `lumpinfo`, `numlumps`, and all `W_*` entry points are
+provided by Rust.
+
+Pure-Rust parsing (no C runtime) lives in `WadArchive` for unit tests and tooling.
+
 Query from the game:
 
 ```bash
