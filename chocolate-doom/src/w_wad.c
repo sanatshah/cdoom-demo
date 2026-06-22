@@ -20,6 +20,7 @@
 
 
 #include <ctype.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +33,10 @@
 #include "m_misc.h"
 #include "v_diskicon.h"
 #include "z_zone.h"
+
+#ifdef ENABLE_CDOOM_RUST
+#include "cdoom_rust.h"
+#endif
 
 #include "w_wad.h"
 
@@ -73,6 +78,9 @@ static int reloadlump = -1;
 // Hash function used for lump names.
 unsigned int W_LumpNameHash(const char *s)
 {
+#ifdef ENABLE_CDOOM_RUST
+    return cdoom_rust_wad_lump_name_hash(s);
+#else
     // This is the djb2 string hash function, modded to work on strings
     // that have a maximum length of 8.
 
@@ -85,7 +93,29 @@ unsigned int W_LumpNameHash(const char *s)
     }
 
     return result;
+#endif
 }
+
+#ifdef ENABLE_CDOOM_RUST
+static void W_RustParseError(const char *filename, const char *what, int status)
+{
+    switch (status)
+    {
+        case cdoom_rust_PARSE_SHORT_READ:
+            I_Error("Wad file %s has a truncated %s", filename, what);
+            break;
+        case cdoom_rust_PARSE_INVALID_IDENTIFICATION:
+            I_Error("Wad file %s doesn't have IWAD or PWAD id\n", filename);
+            break;
+        case cdoom_rust_PARSE_OVERFLOW:
+            I_Error("Wad file %s has an oversized %s", filename, what);
+            break;
+        default:
+            I_Error("Wad file %s has an invalid %s", filename, what);
+            break;
+    }
+}
+#endif
 
 //
 // LUMP BASED ROUTINES.
@@ -105,12 +135,17 @@ wad_file_t *W_AddFile (const char *filename)
     wadinfo_t header;
     lumpindex_t i;
     wad_file_t *wad_file;
-    int length;
+    size_t length;
     int startlump;
     filelump_t *fileinfo;
     filelump_t *filerover;
     lumpinfo_t *filelumps;
     int numfilelumps;
+#ifdef ENABLE_CDOOM_RUST
+    cdoom_rust_CdoomRustWadHeader rust_header;
+    cdoom_rust_CdoomRustWadDirectoryEntry rust_lump;
+    int rust_status;
+#endif
 
     // If the filename begins with a ~, it indicates that we should use the
     // reload hack.
@@ -162,8 +197,27 @@ wad_file_t *W_AddFile (const char *filename)
     else
     {
 	// WAD file
-        W_Read(wad_file, 0, &header, sizeof(header));
+        if (W_Read(wad_file, 0, &header, sizeof(header)) < sizeof(header))
+        {
+            W_CloseFile(wad_file);
+            I_Error("Wad file %s has a truncated header", filename);
+        }
 
+#ifdef ENABLE_CDOOM_RUST
+        rust_status = cdoom_rust_wad_parse_header((const uint8_t *) &header,
+                                                  sizeof(header),
+                                                  &rust_header);
+        if (rust_status != cdoom_rust_PARSE_OK)
+        {
+            W_CloseFile(wad_file);
+            W_RustParseError(filename, "header", rust_status);
+        }
+
+        memcpy(header.identification, rust_header.identification,
+               sizeof(header.identification));
+        header.numlumps = rust_header.num_lumps;
+        header.infotableofs = rust_header.info_table_offset;
+#else
 	if (strncmp(header.identification,"IWAD",4))
 	{
 	    // Homebrew levels?
@@ -178,6 +232,8 @@ wad_file_t *W_AddFile (const char *filename)
 	}
 
 	header.numlumps = LONG(header.numlumps);
+	header.infotableofs = LONG(header.infotableofs);
+#endif
 
          // Vanilla Doom doesn't like WADs with more than 4046 lumps
          // https://www.doomworld.com/vb/post/1010985
@@ -188,11 +244,28 @@ wad_file_t *W_AddFile (const char *filename)
                           "PWAD %s has %d", filename, header.numlumps);
          }
 
-	header.infotableofs = LONG(header.infotableofs);
-	length = header.numlumps*sizeof(filelump_t);
-	fileinfo = Z_Malloc(length, PU_STATIC, 0);
+#ifdef ENABLE_CDOOM_RUST
+        rust_status = cdoom_rust_wad_directory_size(header.numlumps, &length);
+        if (rust_status != cdoom_rust_PARSE_OK || length > INT_MAX)
+        {
+            W_CloseFile(wad_file);
+            if (rust_status == cdoom_rust_PARSE_OK)
+            {
+                rust_status = cdoom_rust_PARSE_OVERFLOW;
+            }
+            W_RustParseError(filename, "directory", rust_status);
+        }
+#else
+	length = header.numlumps * sizeof(filelump_t);
+#endif
 
-        W_Read(wad_file, header.infotableofs, fileinfo, length);
+	fileinfo = Z_Malloc((int) length, PU_STATIC, 0);
+
+        if (W_Read(wad_file, header.infotableofs, fileinfo, length) < length)
+        {
+            W_CloseFile(wad_file);
+            I_Error("Wad file %s has a truncated directory", filename);
+        }
 	numfilelumps = header.numlumps;
     }
 
@@ -213,10 +286,24 @@ wad_file_t *W_AddFile (const char *filename)
     {
         lumpinfo_t *lump_p = &filelumps[i - startlump];
         lump_p->wad_file = wad_file;
+#ifdef ENABLE_CDOOM_RUST
+        rust_status = cdoom_rust_wad_parse_directory_entry(
+            (const uint8_t *) filerover, sizeof(*filerover), &rust_lump);
+        if (rust_status != cdoom_rust_PARSE_OK)
+        {
+            W_CloseFile(wad_file);
+            W_RustParseError(filename, "directory entry", rust_status);
+        }
+
+        lump_p->position = rust_lump.file_pos;
+        lump_p->size = rust_lump.size;
+        memcpy(lump_p->name, rust_lump.name, 8);
+#else
         lump_p->position = LONG(filerover->filepos);
         lump_p->size = LONG(filerover->size);
-        lump_p->cache = NULL;
         strncpy(lump_p->name, filerover->name, 8);
+#endif
+        lump_p->cache = NULL;
         lumpinfo[i] = lump_p;
 
         ++filerover;
