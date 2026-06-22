@@ -3,8 +3,12 @@
 //! Each new Rust module should add parity checks here (or as integration tests)
 //! before flipping the CMake feature flag that routes production code through Rust.
 
+mod wad;
+
 use std::ffi::CStr;
 use std::path::Path;
+
+pub use wad::{freedoom1_metadata, freedoom1_path};
 
 /// Expected Chocolate Doom package version vendored in this repo.
 pub const CHOCOLATE_DOOM_VERSION: &str = "3.1.1";

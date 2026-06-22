@@ -15,9 +15,10 @@
 // DESCRIPTION:
 //	Handles WAD file header, directory, lump I/O.
 //
+// When USE_RUST_WAD is defined, this translation unit is omitted and the
+// implementation is provided by cdoom-core (see cdoom-rust/cdoom-core/src/wad/).
 
-
-
+#ifndef USE_RUST_WAD
 
 #include <ctype.h>
 #include <stdio.h>
@@ -627,3 +628,5 @@ boolean W_IsIWADLump(const lumpinfo_t *lump)
 {
 	return lump->wad_file == lumpinfo[0]->wad_file;
 }
+
+#endif /* USE_RUST_WAD */
