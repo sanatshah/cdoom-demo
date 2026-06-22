@@ -10,7 +10,7 @@ Local [Chocolate Doom](https://github.com/chocolate-doom/chocolate-doom) setup b
 ## Quick start
 
 ```bash
-./build.sh   # install deps, clone source, compile
+./build.sh   # install deps and compile
 ./run.sh     # download Freedoom WADs (first run) and launch
 ```
 
@@ -35,13 +35,13 @@ Local [Chocolate Doom](https://github.com/chocolate-doom/chocolate-doom) setup b
 
 ```
 cdoom/
-  chocolate-doom/   # cloned upstream source (gitignored)
-  wads/             # Freedoom WADs, auto-downloaded (gitignored)
-  build.sh          # installs deps + clones + compiles
+  chocolate-doom/   # vendored upstream Chocolate Doom source
+  wads/             # Freedoom WADs, auto-downloaded
+  build.sh          # installs deps + compiles
   run.sh            # ensures WAD present, launches the game
 ```
 
 ## Notes
 
-- `chocolate-doom/` is a plain git clone of the upstream repo, not a submodule.
+- `chocolate-doom/` is vendored upstream source from [Chocolate Doom](https://github.com/chocolate-doom/chocolate-doom).
 - Game data comes from Freedoom (free and open source). No proprietary WADs are downloaded.

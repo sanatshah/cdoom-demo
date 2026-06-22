@@ -7,13 +7,9 @@ cd "$ROOT"
 echo "==> Installing build dependencies via Homebrew..."
 brew install cmake fluid-synth libpng libsamplerate ninja sdl2 sdl2_mixer sdl2_net
 
-echo "==> Cloning or updating chocolate-doom source..."
-if [ -d chocolate-doom/.git ]; then
-  git -C chocolate-doom pull --ff-only
-elif [ -d chocolate-doom ]; then
-  echo "    Using existing chocolate-doom/ (not a git clone; skipping clone/pull)"
-else
-  git clone https://github.com/chocolate-doom/chocolate-doom.git chocolate-doom
+if [ ! -d chocolate-doom ]; then
+  echo "Error: chocolate-doom/ source directory not found." >&2
+  exit 1
 fi
 
 echo "==> Configuring and building..."
