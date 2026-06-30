@@ -38,7 +38,14 @@ runs `rustup toolchain install stable`; do not pin an older toolchain.
 ### Running the game
 `./run.sh` launches the game with `wads/freedoom1.wad` (WADs already present, so
 its download path is skipped). GUI requires a display — a VNC desktop is available
-on `DISPLAY=:1`. Config/saves land in `~/.local/share/chocolate-doom/`.
+on `DISPLAY=:1` (e.g. `DISPLAY=:1 ./run.sh -window`). Config/saves land in
+`~/.local/share/chocolate-doom/`.
+
+### Known caveat — no audio device on the VM
+There is no ALSA/PulseAudio device, so the game prints `ALSA lib ... Couldn't open
+audio device` and `Error initialising SDL_mixer` / `OPL_Init: Failed to find a
+working driver` at startup. These are harmless — the engine still runs and renders
+normally. Pass `-nosound -nomusic` to silence them.
 
 ### Known caveat — headless timedemo does not self-exit
 `chocolate-doom ... -timedemo demo1 -nodraw -nosound -nomusic` runs the full
