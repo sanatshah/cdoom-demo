@@ -26,7 +26,11 @@ On this VM, dependencies are installed by the startup update script, so skip
 ### Rust toolchain
 `cdoom-rust/rust-toolchain.toml` pins `channel = "stable"`. Build deps (e.g.
 `cbindgen`'s `clap`) require **edition2024 → rustc ≥ 1.85**. The update script
-runs `rustup toolchain install stable`; do not pin an older toolchain.
+runs `rustup toolchain install stable` and `rustup default stable`; do not pin
+an older toolchain. The default must be `stable` because the build step 1 command
+above runs `cargo` from the repo root (outside `cdoom-rust/`), so the
+`rust-toolchain.toml` override does not apply there — the stale base-image default
+(1.83) would otherwise fail with `feature `edition2024` is required`.
 
 ### Tests / verification
 - Rust unit tests: `cd cdoom-rust && cargo test --workspace` (3 tests in `cdoom-verify`).
