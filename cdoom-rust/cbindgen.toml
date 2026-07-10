@@ -8,6 +8,10 @@ usize_is_size_t = true
 prefix = "cdoom_rust_"
 
 [export.rename]
+"cdoom_rust_fixed_div" = "cdoom_rust_fixed_div"
+"cdoom_rust_fixed_mul" = "cdoom_rust_fixed_mul"
+"cdoom_rust_m_add_to_box" = "cdoom_rust_m_add_to_box"
+"cdoom_rust_m_clear_box" = "cdoom_rust_m_clear_box"
 "cdoom_rust_version" = "cdoom_rust_version"
 
 [enum]
