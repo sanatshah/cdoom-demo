@@ -3,7 +3,6 @@
 //! Each new Rust module should add parity checks here (or as integration tests)
 //! before flipping the CMake feature flag that routes production code through Rust.
 
-use cdoom_core::{m_bbox, m_fixed};
 use std::ffi::CStr;
 use std::path::Path;
 
@@ -29,13 +28,14 @@ pub fn rust_version_from_ffi() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cdoom_core::{m_bbox, m_fixed};
 
     fn reference_fixed_mul(a: m_fixed::Fixed, b: m_fixed::Fixed) -> m_fixed::Fixed {
         (((a as i64) * (b as i64)) >> m_fixed::FRACBITS) as m_fixed::Fixed
     }
 
     fn reference_fixed_div(a: m_fixed::Fixed, b: m_fixed::Fixed) -> m_fixed::Fixed {
-        if ((a.wrapping_abs() >> 14) >= b.wrapping_abs()) {
+        if (a.wrapping_abs() >> 14) >= b.wrapping_abs() {
             if (a ^ b) < 0 {
                 i32::MIN
             } else {
@@ -121,12 +121,12 @@ mod tests {
         );
 
         m_bbox::add_to_box(&mut box_, 10, -20);
-        assert_eq!(box_, [-20, -20, 10, 10]);
+        assert_eq!(box_, [i32::MIN, -20, 10, i32::MIN]);
 
         m_bbox::add_to_box(&mut box_, -30, 40);
-        assert_eq!(box_, [40, -20, -30, 10]);
+        assert_eq!(box_, [40, -20, -30, i32::MIN]);
 
-        m_bbox::add_to_box(&mut box_, 5, 15);
+        m_bbox::add_to_box(&mut box_, 10, 15);
         assert_eq!(box_, [40, -20, -30, 10]);
     }
 
@@ -139,6 +139,7 @@ mod tests {
 
         cdoom_core::cdoom_rust_m_add_to_box(box_.as_mut_ptr(), 7, 9);
         cdoom_core::cdoom_rust_m_add_to_box(box_.as_mut_ptr(), -3, 11);
+        cdoom_core::cdoom_rust_m_add_to_box(box_.as_mut_ptr(), 7, 9);
         assert_eq!(box_, [11, 9, -3, 7]);
     }
 }
