@@ -32,6 +32,8 @@
 
 #include "tables.h"
 
+#ifndef USE_RUST_TABLES
+
 // to get a global angle from cartesian coordinates, the coordinates are
 // flipped until they are in the first octant of the coordinate system, then
 // the y (<=x) is scaled and divided by x to get a tangent (slope) value
@@ -2225,3 +2227,4 @@ const byte gammatable[5][256] =
     }
 };
 
+#endif /* USE_RUST_TABLES */
