@@ -38,6 +38,13 @@
 // which is looked up in the tantoangle[] table.  The +1 size is to handle
 // the case when x==y without additional checking.
 
+#ifdef USE_RUST_TABLES
+int SlopeDiv(unsigned int num, unsigned int den)
+{
+    return cdoom_rust_tables_slope_div(num, den);
+}
+#else
+
 int SlopeDiv(unsigned int num, unsigned int den)
 {
     unsigned ans;
@@ -2224,4 +2231,6 @@ const byte gammatable[5][256] =
         247,248,248,249,249,250,250,251,251,252,252,253,254,254,255,255
     }
 };
+
+#endif
 
