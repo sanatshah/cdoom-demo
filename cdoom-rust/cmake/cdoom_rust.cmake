@@ -42,11 +42,14 @@ add_executable(cdoom_rust_probe "${CDOOM_RUST_DIR}/tools/probe.c")
 target_link_libraries(cdoom_rust_probe PRIVATE cdoom_rust)
 add_dependencies(cdoom_rust_probe cdoom_rust_build)
 
-# Attach Rust headers/flags to game executables. Linking is done via EXTRA_LIBS.
+# Attach Rust headers/flags to C targets. Linking is done via EXTRA_LIBS.
 function(cdoom_rust_link target)
     add_dependencies("${target}" cdoom_rust_build)
     target_include_directories("${target}" PRIVATE "${CDOOM_RUST_DIR}/include")
     target_compile_definitions("${target}" PRIVATE ENABLE_CDOOM_RUST=1)
+    if(USE_RUST_TABLES)
+        target_compile_definitions("${target}" PRIVATE USE_RUST_TABLES=1)
+    endif()
 endfunction()
 
 message(STATUS "cdoom-rust: ${CDOOM_RUST_LIB}")
