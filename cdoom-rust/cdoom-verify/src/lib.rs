@@ -6,6 +6,7 @@
 use std::ffi::CStr;
 use std::path::Path;
 
+#[cfg(test)]
 const TABLES_C: &str = include_str!("../../../chocolate-doom/src/tables.c");
 
 /// Expected Chocolate Doom package version vendored in this repo.
@@ -27,6 +28,7 @@ pub fn rust_version_from_ffi() -> String {
     cstr.to_string_lossy().into_owned()
 }
 
+#[cfg(test)]
 fn c_initializer_for(declaration: &str) -> &'static str {
     let declaration_start = TABLES_C.find(declaration).expect("C declaration present");
     let initializer_start = TABLES_C[declaration_start..]
@@ -51,6 +53,7 @@ fn c_initializer_for(declaration: &str) -> &'static str {
     panic!("C initializer is unterminated");
 }
 
+#[cfg(test)]
 fn parse_c_values(declaration: &str) -> Vec<i64> {
     let initializer = c_initializer_for(declaration);
     let mut values = Vec::new();
@@ -72,6 +75,7 @@ fn parse_c_values(declaration: &str) -> Vec<i64> {
     values
 }
 
+#[cfg(test)]
 fn i32_byte_dump(values: impl IntoIterator<Item = i32>) -> Vec<u8> {
     values
         .into_iter()
@@ -79,6 +83,7 @@ fn i32_byte_dump(values: impl IntoIterator<Item = i32>) -> Vec<u8> {
         .collect::<Vec<_>>()
 }
 
+#[cfg(test)]
 fn u32_byte_dump(values: impl IntoIterator<Item = u32>) -> Vec<u8> {
     values
         .into_iter()
