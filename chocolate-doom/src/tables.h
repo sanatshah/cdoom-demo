@@ -37,6 +37,10 @@
 #include "doomtype.h"
 
 #include "m_fixed.h"
+
+#ifdef USE_RUST_TABLES
+#include "cdoom_rust.h"
+#endif
 	
 #define FINEANGLES		8192
 #define FINEMASK		(FINEANGLES-1)
@@ -46,17 +50,33 @@
 #define ANGLETOFINESHIFT	19		
 
 // Effective size is 10240.
+#ifdef USE_RUST_TABLES
+#define finesine (cdoom_rust_tables_finesine())
+#else
 extern const fixed_t finesine[5*FINEANGLES/4];
+#endif
 
 // Re-use data, is just PI/2 pahse shift.
+#ifdef USE_RUST_TABLES
+#define finecosine (cdoom_rust_tables_finecosine())
+#else
 extern const fixed_t *finecosine;
+#endif
 
 
 // Effective size is 4096.
+#ifdef USE_RUST_TABLES
+#define finetangent (cdoom_rust_tables_finetangent())
+#else
 extern const fixed_t finetangent[FINEANGLES/2];
+#endif
 
 // Gamma correction tables.
+#ifdef USE_RUST_TABLES
+#define gammatable ((const byte (*)[256]) cdoom_rust_tables_gammatable())
+#else
 extern const byte gammatable[5][256];
+#endif
 
 // Binary Angle Measument, BAM.
 
@@ -84,7 +104,11 @@ typedef unsigned int angle_t;
 // Effective size is 2049;
 // The +1 size is to handle the case when x==y
 //  without additional checking.
+#ifdef USE_RUST_TABLES
+#define tantoangle (cdoom_rust_tables_tantoangle())
+#else
 extern const angle_t tantoangle[SLOPERANGE+1];
+#endif
 
 
 // Utility function,
