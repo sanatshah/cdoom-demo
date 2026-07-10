@@ -52,10 +52,10 @@
 #ifdef USE_RUST_TABLES
 
 // Effective size is 10240.
-#define finesine (cdoom_rust_tables_finesine())
+#define finesine ((const fixed_t *) cdoom_rust_tables_finesine())
 
 // Re-use data, is just PI/2 pahse shift.
-#define finecosine (cdoom_rust_tables_finecosine())
+#define finecosine ((const fixed_t *) cdoom_rust_tables_finecosine())
 
 #else
 
@@ -70,7 +70,7 @@ extern const fixed_t *finecosine;
 
 // Effective size is 4096.
 #ifdef USE_RUST_TABLES
-#define finetangent (cdoom_rust_tables_finetangent())
+#define finetangent ((const fixed_t *) cdoom_rust_tables_finetangent())
 #else
 extern const fixed_t finetangent[FINEANGLES/2];
 #endif
@@ -109,7 +109,7 @@ typedef unsigned int angle_t;
 // The +1 size is to handle the case when x==y
 //  without additional checking.
 #ifdef USE_RUST_TABLES
-#define tantoangle (cdoom_rust_tables_tantoangle())
+#define tantoangle ((const angle_t *) cdoom_rust_tables_tantoangle())
 #else
 extern const angle_t tantoangle[SLOPERANGE+1];
 #endif
