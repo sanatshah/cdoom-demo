@@ -25,17 +25,23 @@
 
 #include "m_fixed.h"
 
+#ifdef USE_RUST_M_FIXED
+#include "cdoom_rust.h"
+#endif
 
 
 
-// Fixme. __USE_C_FIXED__ or something.
 
 fixed_t
 FixedMul
 ( fixed_t	a,
   fixed_t	b )
 {
+#ifdef USE_RUST_M_FIXED
+    return cdoom_rust_fixed_mul(a, b);
+#else
     return ((int64_t) a * (int64_t) b) >> FRACBITS;
+#endif
 }
 
 
@@ -46,6 +52,9 @@ FixedMul
 
 fixed_t FixedDiv(fixed_t a, fixed_t b)
 {
+#ifdef USE_RUST_M_FIXED
+    return cdoom_rust_fixed_div(a, b);
+#else
     if ((abs(a) >> 14) >= abs(b))
     {
 	return (a^b) < 0 ? INT_MIN : INT_MAX;
@@ -58,5 +67,6 @@ fixed_t FixedDiv(fixed_t a, fixed_t b)
 
 	return (fixed_t) result;
     }
+#endif
 }
 
