@@ -2,6 +2,13 @@ foreach(SUBDIR doom heretic hexen strife setup)
     add_subdirectory("${SUBDIR}")
 endforeach()
 
+if(ENABLE_CDOOM_RUST)
+    cdoom_rust_link(doom)
+    cdoom_rust_link(heretic)
+    cdoom_rust_link(hexen)
+    cdoom_rust_link(strife)
+endif()
+
 # Common source files used by absolutely everything:
 
 set(COMMON_SOURCE_FILES
