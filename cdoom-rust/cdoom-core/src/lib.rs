@@ -12,4 +12,6 @@ pub fn version_string() -> &'static str {
     concat!("cdoom-core ", env!("CARGO_PKG_VERSION"))
 }
 
-pub use ffi::{cdoom_rust_init, cdoom_rust_version, SlopeDiv};
+#[cfg(feature = "rust-tables")]
+pub use ffi::SlopeDiv;
+pub use ffi::{cdoom_rust_init, cdoom_rust_version};
