@@ -32,6 +32,15 @@
 
 #include "tables.h"
 
+#ifdef USE_RUST_TABLES
+
+int SlopeDiv(unsigned int num, unsigned int den)
+{
+    return cdoom_rust_tables_slope_div(num, den);
+}
+
+#else
+
 // to get a global angle from cartesian coordinates, the coordinates are
 // flipped until they are in the first octant of the coordinate system, then
 // the y (<=x) is scaled and divided by x to get a tangent (slope) value
@@ -2225,3 +2234,4 @@ const byte gammatable[5][256] =
     }
 };
 
+#endif
