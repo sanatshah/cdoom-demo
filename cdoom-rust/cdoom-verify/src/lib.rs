@@ -105,10 +105,10 @@ mod tests {
         assert_eq!(bbox[BOXLEFT], i32::MAX);
 
         cdoom_core::m_bbox::add_to_box(&mut bbox, 10, 20);
-        assert_eq!(bbox, [20, 20, 10, 10]);
+        assert_eq!(bbox, [i32::MIN, 20, 10, i32::MIN]);
 
         cdoom_core::m_bbox::add_to_box(&mut bbox, -5, 30);
-        assert_eq!(bbox, [30, 20, -5, 10]);
+        assert_eq!(bbox, [30, 20, -5, i32::MIN]);
 
         cdoom_core::m_bbox::add_to_box(&mut bbox, 15, 15);
         assert_eq!(bbox, [30, 15, -5, 15]);
@@ -122,11 +122,12 @@ mod tests {
             cdoom_core::cdoom_rust_m_clear_box(bbox.as_mut_ptr());
             cdoom_core::cdoom_rust_m_add_to_box(bbox.as_mut_ptr(), 100, -50);
             cdoom_core::cdoom_rust_m_add_to_box(bbox.as_mut_ptr(), -25, 75);
+            cdoom_core::cdoom_rust_m_add_to_box(bbox.as_mut_ptr(), 125, -75);
         }
 
         assert_eq!(bbox[BOXTOP], 75);
-        assert_eq!(bbox[BOXBOTTOM], -50);
+        assert_eq!(bbox[BOXBOTTOM], -75);
         assert_eq!(bbox[BOXLEFT], -25);
-        assert_eq!(bbox[BOXRIGHT], 100);
+        assert_eq!(bbox[BOXRIGHT], 125);
     }
 }
