@@ -5,7 +5,14 @@ get_filename_component(CDOOM_RUST_DIR "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 find_program(CARGO_EXECUTABLE cargo REQUIRED)
 
 set(CDOOM_RUST_PROFILE "release" CACHE STRING "Cargo profile for cdoom-rust")
-set(CDOOM_RUST_TARGET_DIR "${CDOOM_RUST_DIR}/target")
+if(USE_RUST_TABLES)
+    set(CDOOM_RUST_FEATURE_ARGS --features rust-tables)
+    set(CDOOM_RUST_VARIANT "rust-tables")
+else()
+    set(CDOOM_RUST_FEATURE_ARGS "")
+    set(CDOOM_RUST_VARIANT "c-tables")
+endif()
+set(CDOOM_RUST_TARGET_DIR "${CDOOM_RUST_DIR}/target/cmake-${CDOOM_RUST_VARIANT}")
 set(CDOOM_RUST_LIB "${CDOOM_RUST_TARGET_DIR}/${CDOOM_RUST_PROFILE}/libcdoom_core.a")
 set(CDOOM_RUST_HEADER "${CDOOM_RUST_DIR}/include/cdoom_rust.h")
 
@@ -21,8 +28,10 @@ add_custom_command(
     OUTPUT "${CDOOM_RUST_LIB}" "${CDOOM_RUST_HEADER}"
     COMMAND ${CARGO_EXECUTABLE} build
             --manifest-path "${CDOOM_RUST_DIR}/Cargo.toml"
+            --target-dir "${CDOOM_RUST_TARGET_DIR}"
             --profile "${CDOOM_RUST_PROFILE}"
             -p cdoom-core
+            ${CDOOM_RUST_FEATURE_ARGS}
     WORKING_DIRECTORY "${CDOOM_RUST_DIR}"
     COMMENT "Building cdoom-core (${CDOOM_RUST_PROFILE})"
     VERBATIM
