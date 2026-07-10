@@ -1,6 +1,6 @@
 [package]
 name = "cdoom-sys"
-description = "Generated and hand-written C bindings for Chocolate Doom (future bindgen home)"
+description = "Generated C bindings for Chocolate Doom shared headers"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -8,5 +8,5 @@ license.workspace = true
 [lib]
 path = "src/lib.rs"
 
-[dependencies]
-cdoom-core = { path = "../cdoom-core" }
+[build-dependencies]
+bindgen = "0.72.1"

@@ -4,6 +4,9 @@
 
 mod ffi;
 
+/// Generated bindings to shared Chocolate Doom C headers.
+pub use cdoom_sys as sys;
+
 /// Human-readable library version (crate version plus component name).
 pub fn version_string() -> &'static str {
     concat!("cdoom-core ", env!("CARGO_PKG_VERSION"))

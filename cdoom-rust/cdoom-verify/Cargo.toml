@@ -8,3 +8,4 @@ publish = false
 
 [dependencies]
 cdoom-core = { path = "../cdoom-core" }
+cdoom-sys = { path = "../cdoom-sys" }

@@ -40,6 +40,16 @@ mod tests {
     }
 
     #[test]
+    fn bindgen_reads_fixed_point_constant() {
+        assert_eq!(cdoom_sys::FRACBITS, 16);
+        assert_eq!(cdoom_sys::FRACUNIT, 1 << 16);
+        assert_eq!(
+            std::mem::size_of::<cdoom_sys::fixed_t>(),
+            std::mem::size_of::<i32>()
+        );
+    }
+
+    #[test]
     fn version_string_is_non_empty() {
         assert!(!cdoom_core::version_string().is_empty());
     }

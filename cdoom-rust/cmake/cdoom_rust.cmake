@@ -8,6 +8,19 @@ set(CDOOM_RUST_PROFILE "release" CACHE STRING "Cargo profile for cdoom-rust")
 set(CDOOM_RUST_TARGET_DIR "${CDOOM_RUST_DIR}/target")
 set(CDOOM_RUST_LIB "${CDOOM_RUST_TARGET_DIR}/${CDOOM_RUST_PROFILE}/libcdoom_core.a")
 set(CDOOM_RUST_HEADER "${CDOOM_RUST_DIR}/include/cdoom_rust.h")
+option(USE_RUST_BINDGEN "Generate cdoom-sys bindings from Chocolate Doom headers" ON)
+
+if(USE_RUST_BINDGEN)
+    set(CDOOM_RUST_BINDGEN_FLAG "1")
+else()
+    set(CDOOM_RUST_BINDGEN_FLAG "0")
+endif()
+
+if(WIN32)
+    set(CDOOM_RUST_BINDGEN_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR};${CMAKE_CURRENT_SOURCE_DIR}/src")
+else()
+    set(CDOOM_RUST_BINDGEN_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}:${CMAKE_CURRENT_SOURCE_DIR}/src")
+endif()
 
 if(APPLE)
     set(CDOOM_RUST_LINK_LIBS "")
@@ -19,10 +32,25 @@ endif()
 
 add_custom_command(
     OUTPUT "${CDOOM_RUST_LIB}" "${CDOOM_RUST_HEADER}"
-    COMMAND ${CARGO_EXECUTABLE} build
+    COMMAND ${CMAKE_COMMAND} -E env
+            "USE_RUST_BINDGEN=${CDOOM_RUST_BINDGEN_FLAG}"
+            "CDOOM_SOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}"
+            "CDOOM_BINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}"
+            "CDOOM_BINDGEN_INCLUDE_DIRS=${CDOOM_RUST_BINDGEN_INCLUDE_DIRS}"
+            ${CARGO_EXECUTABLE} build
             --manifest-path "${CDOOM_RUST_DIR}/Cargo.toml"
             --profile "${CDOOM_RUST_PROFILE}"
             -p cdoom-core
+    DEPENDS
+            "${CDOOM_RUST_DIR}/Cargo.toml"
+            "${CDOOM_RUST_DIR}/cdoom-core/Cargo.toml"
+            "${CDOOM_RUST_DIR}/cdoom-core/build.rs"
+            "${CDOOM_RUST_DIR}/cdoom-core/src/ffi.rs"
+            "${CDOOM_RUST_DIR}/cdoom-core/src/lib.rs"
+            "${CDOOM_RUST_DIR}/cdoom-sys/Cargo.toml"
+            "${CDOOM_RUST_DIR}/cdoom-sys/build.rs"
+            "${CDOOM_RUST_DIR}/cdoom-sys/src/lib.rs"
+            "${CDOOM_RUST_DIR}/cdoom-sys/wrapper.h"
     WORKING_DIRECTORY "${CDOOM_RUST_DIR}"
     COMMENT "Building cdoom-core (${CDOOM_RUST_PROFILE})"
     VERBATIM
@@ -50,3 +78,4 @@ function(cdoom_rust_link target)
 endfunction()
 
 message(STATUS "cdoom-rust: ${CDOOM_RUST_LIB}")
+message(STATUS "cdoom-rust bindgen: ${USE_RUST_BINDGEN}")
