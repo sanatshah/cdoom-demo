@@ -7,7 +7,7 @@ Rust workspace for the [strangler-fig migration](https://martinfowler.com/bliki/
 | Crate | Role |
 |---|---|
 | `cdoom-core` | Migration modules + `staticlib` linked into Chocolate Doom |
-| `cdoom-sys` | Future home for `bindgen` C bindings (placeholder today) |
+| `cdoom-sys` | `bindgen` C bindings for shared Chocolate Doom headers |
 | `cdoom-verify` | Shared parity checks and baseline test helpers |
 
 ## Build
@@ -24,6 +24,12 @@ Disable Rust linking:
 
 ```bash
 cmake .. -DENABLE_CDOOM_RUST=OFF   # in chocolate-doom/build
+```
+
+Generate shared C bindings during the Rust build (enabled by default):
+
+```bash
+cmake .. -DUSE_RUST_BINDGEN=ON      # build-time only, no runtime routing
 ```
 
 ## C ABI (Step 0)
