@@ -231,6 +231,12 @@ if(ENABLE_CDOOM_RUST)
     cdoom_rust_link("${PROGRAM_PREFIX}strife")
 endif()
 
+if(USE_RUST_M_FIXED AND ENABLE_CDOOM_RUST)
+    foreach(target "${PROGRAM_PREFIX}doom" "${PROGRAM_PREFIX}heretic" "${PROGRAM_PREFIX}hexen" "${PROGRAM_PREFIX}strife")
+        target_compile_definitions("${target}" PRIVATE USE_RUST_M_FIXED=1)
+    endforeach()
+endif()
+
 # Source files needed for chocolate-setup:
 
 set(SETUP_FILES
