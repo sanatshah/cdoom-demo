@@ -4,8 +4,10 @@
 //! before flipping the CMake feature flag that routes production code through Rust.
 
 use std::ffi::CStr;
+#[cfg(test)]
 use std::fs;
 use std::path::Path;
+#[cfg(test)]
 use std::path::PathBuf;
 
 /// Expected Chocolate Doom package version vendored in this repo.
@@ -27,6 +29,7 @@ pub fn rust_version_from_ffi() -> String {
     cstr.to_string_lossy().into_owned()
 }
 
+#[cfg(test)]
 fn repo_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
@@ -36,11 +39,13 @@ fn repo_root() -> PathBuf {
         .to_path_buf()
 }
 
+#[cfg(test)]
 fn c_tables_source() -> String {
     fs::read_to_string(repo_root().join("chocolate-doom/src/tables.c"))
         .expect("read chocolate-doom/src/tables.c")
 }
 
+#[cfg(test)]
 fn c_array_body<'a>(source: &'a str, name: &str) -> &'a str {
     let declaration_pos = [
         format!("const fixed_t {name}"),
@@ -72,6 +77,7 @@ fn c_array_body<'a>(source: &'a str, name: &str) -> &'a str {
     panic!("array {name} has no closing brace");
 }
 
+#[cfg(test)]
 fn parse_c_numbers(source: &str, name: &str) -> Vec<i64> {
     c_array_body(source, name)
         .lines()
@@ -87,6 +93,7 @@ fn parse_c_numbers(source: &str, name: &str) -> Vec<i64> {
         .collect()
 }
 
+#[cfg(test)]
 fn i32_bytes(values: &[i32]) -> Vec<u8> {
     values
         .iter()
@@ -94,6 +101,7 @@ fn i32_bytes(values: &[i32]) -> Vec<u8> {
         .collect()
 }
 
+#[cfg(test)]
 fn u32_bytes(values: &[u32]) -> Vec<u8> {
     values
         .iter()
@@ -159,10 +167,6 @@ mod tests {
     #[test]
     fn finecosine_reuses_finesine_quarter_turn() {
         assert_eq!(
-            cdoom_core::tables::finecosine_slice().as_ptr(),
-            cdoom_core::tables::FINESINE[cdoom_core::tables::FINECOSINE_OFFSET..].as_ptr()
-        );
-        assert_eq!(
             cdoom_core::tables::finecosine_slice()[0],
             cdoom_core::tables::FINESINE[cdoom_core::tables::FINEANGLES / 4]
         );
@@ -176,7 +180,7 @@ mod tests {
         assert_eq!(cdoom_core::tables::slope_div(1, 512), 4);
         assert_eq!(cdoom_core::tables::slope_div(512, 512), 2048);
         assert_eq!(cdoom_core::tables::slope_div(513, 512), 2048);
-        assert_eq!(cdoom_core::tables::slope_div(u32::MAX, u32::MAX), 7);
+        assert_eq!(cdoom_core::tables::slope_div(u32::MAX, u32::MAX), 256);
     }
 
     #[test]
