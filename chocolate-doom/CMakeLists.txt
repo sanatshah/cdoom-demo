@@ -101,6 +101,7 @@ configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 configure_file(src/strife-res.rc.in src/strife-res.rc)
 
 option(ENABLE_CDOOM_RUST "Build and link cdoom Rust migration library" ON)
+option(USE_RUST_M_FIXED "Route m_fixed/m_bbox calls through cdoom Rust" OFF)
 if(ENABLE_CDOOM_RUST)
     include("${CMAKE_CURRENT_SOURCE_DIR}/../cdoom-rust/cmake/cdoom_rust.cmake")
 endif()
