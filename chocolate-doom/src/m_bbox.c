@@ -23,13 +23,20 @@
 
 #include "m_bbox.h"
 
+#ifdef USE_RUST_M_FIXED
+#include "cdoom_rust.h"
+#endif
 
 
 
 void M_ClearBox (fixed_t *box)
 {
+#ifdef USE_RUST_M_FIXED
+    cdoom_rust_m_clear_box(box);
+#else
     box[BOXTOP] = box[BOXRIGHT] = INT_MIN;
     box[BOXBOTTOM] = box[BOXLEFT] = INT_MAX;
+#endif
 }
 
 void
@@ -38,6 +45,9 @@ M_AddToBox
   fixed_t	x,
   fixed_t	y )
 {
+#ifdef USE_RUST_M_FIXED
+    cdoom_rust_m_add_to_box(box, x, y);
+#else
     if (x<box[BOXLEFT])
 	box[BOXLEFT] = x;
     else if (x>box[BOXRIGHT])
@@ -46,6 +56,7 @@ M_AddToBox
 	box[BOXBOTTOM] = y;
     else if (y>box[BOXTOP])
 	box[BOXTOP] = y;
+#endif
 }
 
 
