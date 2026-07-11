@@ -6,8 +6,6 @@
 use std::ffi::CStr;
 use std::path::Path;
 
-const FRACUNIT: i32 = 1 << 16;
-
 /// Expected Chocolate Doom package version vendored in this repo.
 pub const CHOCOLATE_DOOM_VERSION: &str = "3.1.1";
 
@@ -30,6 +28,8 @@ pub fn rust_version_from_ffi() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const FRACUNIT: i32 = 1 << 16;
 
     #[test]
     fn ffi_version_matches_crate() {
