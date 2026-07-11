@@ -35,6 +35,7 @@ option(CMAKE_FIND_PACKAGE_PREFER_CONFIG
 
 option(ENABLE_SDL2_NET "Enable SDL2_net" On)
 option(ENABLE_SDL2_MIXER "Enable SDL2_mixer" On)
+option(USE_RUST_M_FIXED "Route m_fixed/m_bbox through cdoom Rust ABI" OFF)
 
 if (NOT DEFINED EMSCRIPTEN)
     find_package(SDL2 2.0.14)
@@ -101,6 +102,10 @@ configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 configure_file(src/strife-res.rc.in src/strife-res.rc)
 
 option(ENABLE_CDOOM_RUST "Build and link cdoom Rust migration library" ON)
+if(USE_RUST_M_FIXED AND NOT ENABLE_CDOOM_RUST)
+    message(STATUS "USE_RUST_M_FIXED requested but ENABLE_CDOOM_RUST is OFF; using C fallback")
+    set(USE_RUST_M_FIXED OFF)
+endif()
 if(ENABLE_CDOOM_RUST)
     include("${CMAKE_CURRENT_SOURCE_DIR}/../cdoom-rust/cmake/cdoom_rust.cmake")
 endif()
