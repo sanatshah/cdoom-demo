@@ -29,6 +29,10 @@
 #include "net_sdl.h"
 #include "net_server.h"
 
+#ifdef USE_RUST_D_DEDICATED
+#include "cdoom_rust.h"
+#endif
+
 // 
 // People can become confused about how dedicated servers work.  Game
 // options are specified to the controlling player who is the first to
@@ -36,6 +40,7 @@
 // specified to a dedicated server.
 //
 
+#ifndef USE_RUST_D_DEDICATED
 static const char *not_dedicated_options[] =
 {
     "-deh", "-iwad", "-cdrom", "-gameversion", "-nomonsters", "-respawn",
@@ -43,9 +48,24 @@ static const char *not_dedicated_options[] =
     "-aa", "-file", "-wart", "-skill", "-episode", "-timer", "-avg", "-warp",
     "-loadgame", "-longtics", "-extratics", "-dup", "-shorttics", NULL,
 };
+#endif
 
 static void CheckForClientOptions(void)
 {
+#ifdef USE_RUST_D_DEDICATED
+    const char *option;
+
+    option = cdoom_rust_dedicated_rejected_option(myargc,
+                                                  (const char * const *) myargv);
+    if (option != NULL)
+    {
+        I_Error("The command line parameter '%s' was specified to a "
+                "dedicated server.\nGame parameters should be specified "
+                "to the first player to join a server, \nnot to the "
+                "server itself. ",
+                option);
+    }
+#else
     int i;
 
     for (i=0; not_dedicated_options[i] != NULL; ++i)
@@ -59,6 +79,7 @@ static void CheckForClientOptions(void)
                     not_dedicated_options[i]);
         }
     }
+#endif
 }
 
 void NET_DedicatedServer(void)
