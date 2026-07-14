@@ -6,6 +6,17 @@ usize_is_size_t = true
 
 [export]
 prefix = "cdoom_rust_"
+exclude = [
+    "M_fopen",
+    "M_FileLength",
+    "I_Error",
+    "malloc",
+    "free",
+    "fread",
+    "fclose",
+    "printf",
+    "exit",
+]
 
 [export.rename]
 "cdoom_rust_version" = "cdoom_rust_version"
