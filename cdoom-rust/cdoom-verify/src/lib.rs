@@ -3,7 +3,9 @@
 //! Each new Rust module should add parity checks here (or as integration tests)
 //! before flipping the CMake feature flag that routes production code through Rust.
 
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
+#[cfg(test)]
+use std::ffi::CString;
 use std::path::Path;
 
 /// Expected Chocolate Doom package version vendored in this repo.
