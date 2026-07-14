@@ -3,9 +3,8 @@
 //! Each new Rust module should add parity checks here (or as integration tests)
 //! before flipping the CMake feature flag that routes production code through Rust.
 
-use std::ffi::{CStr, CString};
-use std::os::raw::c_char;
-use std::path::{Path, PathBuf};
+use std::ffi::CStr;
+use std::path::Path;
 
 /// Expected Chocolate Doom package version vendored in this repo.
 pub const CHOCOLATE_DOOM_VERSION: &str = "3.1.1";
@@ -26,13 +25,16 @@ pub fn rust_version_from_ffi() -> String {
     cstr.to_string_lossy().into_owned()
 }
 
-fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CString;
+    use std::os::raw::c_char;
+    use std::path::PathBuf;
+
+    fn repo_root() -> PathBuf {
+        Path::new(env!("CARGO_MANIFEST_DIR")).join("../..")
+    }
 
     #[test]
     fn ffi_version_matches_crate() {
@@ -57,7 +59,7 @@ mod tests {
         assert!(summary.lump_count > 0);
         assert!(summary.total_size > 0);
         assert_ne!(summary.directory_checksum, 0);
-        assert_eq!(&summary.first_name, b"PLAYPAL\0");
+        assert_eq!(&summary.first_name, b"E1M1\0\0\0\0");
     }
 
     #[test]
