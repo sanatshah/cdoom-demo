@@ -147,6 +147,9 @@ set(DEHACKED_SOURCE_FILES
 set(SOURCE_FILES ${COMMON_SOURCE_FILES} ${GAME_SOURCE_FILES})
 set(SOURCE_FILES_WITH_DEH ${SOURCE_FILES} ${DEHACKED_SOURCE_FILES})
 
+option(USE_RUST_M_ARGV "Route m_argv command-line checks through cdoom-core" OFF)
+option(USE_RUST_M_CHEAT "Route m_cheat sequence checks through cdoom-core" OFF)
+
 set(EXTRA_LIBS ${SDL_LINK_LIBS} textscreen pcsound opl)
 if(ENABLE_CDOOM_RUST)
     list(APPEND EXTRA_LIBS cdoom_rust)
@@ -229,6 +232,19 @@ if(ENABLE_CDOOM_RUST)
     cdoom_rust_link("${PROGRAM_PREFIX}heretic")
     cdoom_rust_link("${PROGRAM_PREFIX}hexen")
     cdoom_rust_link("${PROGRAM_PREFIX}strife")
+
+    foreach(CDOOM_RUST_GAME_TARGET
+            "${PROGRAM_PREFIX}doom"
+            "${PROGRAM_PREFIX}heretic"
+            "${PROGRAM_PREFIX}hexen"
+            "${PROGRAM_PREFIX}strife")
+        if(USE_RUST_M_ARGV)
+            target_compile_definitions("${CDOOM_RUST_GAME_TARGET}" PRIVATE USE_RUST_M_ARGV=1)
+        endif()
+        if(USE_RUST_M_CHEAT)
+            target_compile_definitions("${CDOOM_RUST_GAME_TARGET}" PRIVATE USE_RUST_M_CHEAT=1)
+        endif()
+    endforeach()
 endif()
 
 # Source files needed for chocolate-setup:
