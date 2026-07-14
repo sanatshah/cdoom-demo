@@ -38,7 +38,9 @@ set_target_properties(cdoom_rust PROPERTIES
     INTERFACE_LINK_LIBRARIES "${CDOOM_RUST_LINK_LIBS}"
 )
 
-add_executable(cdoom_rust_probe "${CDOOM_RUST_DIR}/tools/probe.c")
+add_executable(cdoom_rust_probe
+    "${CDOOM_RUST_DIR}/tools/probe.c"
+    "${CDOOM_RUST_DIR}/tools/probe_stubs.c")
 target_link_libraries(cdoom_rust_probe PRIVATE cdoom_rust)
 add_dependencies(cdoom_rust_probe cdoom_rust_build)
 
