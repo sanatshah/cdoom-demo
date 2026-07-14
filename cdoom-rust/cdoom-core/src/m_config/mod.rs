@@ -167,6 +167,9 @@ pub const SCAN_TO_KEY: [c_int; 128] = [
     0,
     0,
     0,
+    0,
+    0,
+    0,
     KEY_PRTSCR,
     0,
 ];
