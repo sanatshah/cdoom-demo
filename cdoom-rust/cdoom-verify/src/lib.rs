@@ -29,10 +29,13 @@ pub fn rust_version_from_ffi() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cdoom_core::d_dedicated;
     use cdoom_core::d_event::{self, Event};
     use cdoom_core::d_iwad;
+    use cdoom_core::d_loop::{self, NonVanillaPlaybackDecision};
     use cdoom_core::d_mode;
     use cdoom_core::d_ticcmd::TicCmd;
+    use std::ffi::{CStr, CString};
     use std::mem;
 
     fn nul_terminated_str(bytes: &'static [u8]) -> &'static str {
@@ -305,5 +308,101 @@ mod tests {
         assert_eq!(mem::offset_of!(TicCmd, inventory), 8);
         assert_eq!(mem::offset_of!(TicCmd, lookfly), 12);
         assert_eq!(mem::offset_of!(TicCmd, arti), 13);
+    }
+
+    #[test]
+    fn d_loop_nonvanilla_demo_decisions_match_c_policy() {
+        assert!(!d_loop::nonvanilla_record_allowed(false, false));
+        assert!(d_loop::nonvanilla_record_allowed(true, false));
+        assert!(!d_loop::nonvanilla_record_allowed(true, true));
+
+        assert_eq!(
+            d_loop::nonvanilla_playback_decision(false, false, true),
+            NonVanillaPlaybackDecision::DenySilently
+        );
+        assert_eq!(
+            d_loop::nonvanilla_playback_decision(true, true, true),
+            NonVanillaPlaybackDecision::DenySilently
+        );
+        assert_eq!(
+            d_loop::nonvanilla_playback_decision(true, false, true),
+            NonVanillaPlaybackDecision::AllowDemoFile
+        );
+        assert_eq!(
+            d_loop::nonvanilla_playback_decision(true, false, false),
+            NonVanillaPlaybackDecision::DenyWadDemo
+        );
+    }
+
+    #[test]
+    fn d_loop_tic_helpers_match_c_edge_behavior() {
+        assert_eq!(d_loop::get_low_tic(12, 9, false, false), 12);
+        assert_eq!(d_loop::get_low_tic(12, 9, true, false), 9);
+        assert_eq!(d_loop::get_low_tic(12, 15, true, false), 12);
+        assert_eq!(d_loop::get_low_tic(12, 15, true, true), 15);
+
+        let mut cmds = [
+            TicCmd {
+                chatchar: 7,
+                buttons: 128,
+                ..TicCmd::default()
+            },
+            TicCmd {
+                chatchar: 8,
+                buttons: 129,
+                ..TicCmd::default()
+            },
+            TicCmd {
+                chatchar: 9,
+                buttons: 2,
+                ..TicCmd::default()
+            },
+        ];
+
+        // SAFETY: `cmds` is a writable ticcmd buffer with the provided length.
+        unsafe { d_loop::ticdup_squash(cmds.as_mut_ptr(), cmds.len()) };
+        assert_eq!(cmds[0].chatchar, 0);
+        assert_eq!(cmds[0].buttons, 0);
+        assert_eq!(cmds[1].buttons, 0);
+        assert_eq!(cmds[2].buttons, 2);
+
+        let mut ingame = [1, 1, 1, 0];
+        // SAFETY: `ingame` is a writable boolean buffer with the provided length.
+        unsafe { d_loop::single_player_clear(ingame.as_mut_ptr(), ingame.len(), 1) };
+        assert_eq!(ingame, [0, 1, 0, 0]);
+
+        // SAFETY: `ingame` is a readable boolean buffer with the provided length.
+        assert!(unsafe { d_loop::players_in_game(false, false, ingame.as_ptr(), ingame.len()) });
+        // SAFETY: `ingame` is a readable boolean buffer with the provided length.
+        assert!(unsafe { d_loop::players_in_game(true, true, ingame.as_ptr(), ingame.len()) });
+        ingame = [0, 0, 0, 0];
+        // SAFETY: `ingame` is a readable boolean buffer with the provided length.
+        assert!(!unsafe { d_loop::players_in_game(true, true, ingame.as_ptr(), ingame.len()) });
+    }
+
+    #[test]
+    fn d_dedicated_option_rejection_matches_c_table_order() {
+        let args = [
+            CString::new("chocolate-server").unwrap(),
+            CString::new("-WARP").unwrap(),
+            CString::new("1").unwrap(),
+            CString::new("-skill").unwrap(),
+            CString::new("4").unwrap(),
+        ];
+        let ptrs: Vec<_> = args.iter().map(|arg| arg.as_ptr()).collect();
+
+        // SAFETY: `ptrs` is an argv-style array of NUL-terminated strings.
+        let rejected = unsafe { d_dedicated::rejected_option(ptrs.len() as i32, ptrs.as_ptr()) };
+        assert!(!rejected.is_null());
+        // SAFETY: rejected_option returns a pointer to a static NUL-terminated option.
+        let rejected = unsafe { CStr::from_ptr(rejected) };
+        assert_eq!(rejected.to_str().unwrap(), "-skill");
+
+        let args = [CString::new("chocolate-server").unwrap()];
+        let ptrs: Vec<_> = args.iter().map(|arg| arg.as_ptr()).collect();
+        // SAFETY: `ptrs` is an argv-style array of NUL-terminated strings.
+        assert!(
+            unsafe { d_dedicated::rejected_option(ptrs.len() as i32, ptrs.as_ptr()) }.is_null()
+        );
     }
 }
