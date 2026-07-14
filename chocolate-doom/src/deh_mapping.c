@@ -27,6 +27,12 @@
 
 #include "deh_mapping.h"
 
+#ifdef USE_RUST_DEH_MAIN
+#include "cdoom_rust.h"
+#endif
+
+#ifndef USE_RUST_DEH_MAIN
+
 static deh_mapping_entry_t *GetMappingEntryByName(deh_context_t *context,
                                                   deh_mapping_t *mapping,
                                                   char *name)
@@ -71,6 +77,52 @@ static void *GetStructField(void *structptr,
     return (uint8_t *)structptr + offset;
 }
 
+#endif
+
+#ifdef USE_RUST_DEH_MAIN
+
+static void RustWarnUnsupported(void *context, const char *name)
+{
+    DEH_Warning(context, "Field '%s' is unsupported", name);
+}
+
+static void RustWarnNotFound(void *context, const char *name)
+{
+    DEH_Warning(context, "Field named '%s' not found", name);
+}
+
+static void RustErrorIntAsString(void *context, const char *name)
+{
+    DEH_Error(context, "Tried to set '%s' as integer (BUG)", name);
+}
+
+static void RustErrorStringAsInt(void *context, const char *name)
+{
+    DEH_Error(context, "Tried to set '%s' as string (BUG)", name);
+}
+
+static void RustErrorUnknownFieldSize(void *context, const char *name)
+{
+    DEH_Error(context, "Unknown field type for '%s' (BUG)", name);
+}
+
+static int RustStringCopy(char *dest, const char *src, size_t dest_size)
+{
+    return M_StringCopy(dest, src, dest_size);
+}
+
+static void RustSHA1UpdateInt32(void *context, unsigned int value)
+{
+    SHA1_UpdateInt32(context, value);
+}
+
+static void RustFatalUnknownFieldSize(const char *name)
+{
+    I_Error("Unknown dehacked mapping field type for '%s' (BUG)", name);
+}
+
+#endif
+
 //
 // Set the value of a particular field in a structure by name
 //
@@ -78,6 +130,12 @@ static void *GetStructField(void *structptr,
 boolean DEH_SetMapping(deh_context_t *context, deh_mapping_t *mapping,
                        void *structptr, char *name, int value)
 {
+#ifdef USE_RUST_DEH_MAIN
+    return cdoom_rust_deh_set_mapping(context, mapping, structptr, name, value,
+                                      RustWarnUnsupported, RustWarnNotFound,
+                                      RustErrorIntAsString,
+                                      RustErrorUnknownFieldSize);
+#else
     deh_mapping_entry_t *entry;
     void *location;
 
@@ -120,6 +178,7 @@ boolean DEH_SetMapping(deh_context_t *context, deh_mapping_t *mapping,
     }
 
     return true;
+#endif
 }
 
 //
@@ -129,6 +188,13 @@ boolean DEH_SetMapping(deh_context_t *context, deh_mapping_t *mapping,
 boolean DEH_SetStringMapping(deh_context_t *context, deh_mapping_t *mapping,
                              void *structptr, char *name, char *value)
 {
+#ifdef USE_RUST_DEH_MAIN
+    return cdoom_rust_deh_set_string_mapping(context, mapping, structptr, name,
+                                             value, RustWarnUnsupported,
+                                             RustWarnNotFound,
+                                             RustErrorStringAsInt,
+                                             RustStringCopy);
+#else
     deh_mapping_entry_t *entry;
     void *location;
 
@@ -154,11 +220,17 @@ boolean DEH_SetStringMapping(deh_context_t *context, deh_mapping_t *mapping,
     M_StringCopy(location, value, entry->size);
 
     return true;
+#endif
 }
 
 void DEH_StructSHA1Sum(sha1_context_t *context, deh_mapping_t *mapping,
                        void *structptr)
 {
+#ifdef USE_RUST_DEH_MAIN
+    cdoom_rust_deh_struct_sha1_sum(context, mapping, structptr,
+                                   RustSHA1UpdateInt32,
+                                   RustFatalUnknownFieldSize);
+#else
     int i;
 
     // Go through each mapping
@@ -196,5 +268,6 @@ void DEH_StructSHA1Sum(sha1_context_t *context, deh_mapping_t *mapping,
                 break;
         }
     }
+#endif
 }
 

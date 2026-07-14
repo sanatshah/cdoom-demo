@@ -27,8 +27,14 @@
 #include "deh_io.h"
 #include "deh_main.h"
 
+#ifdef USE_RUST_DEH_MAIN
+#include "cdoom_rust.h"
+#endif
+
 // Given a string length, find the maximum length of a 
 // string that can replace it.
+
+#ifndef USE_RUST_DEH_MAIN
 
 static int TXT_MaxStringLength(int len)
 {
@@ -47,8 +53,42 @@ static int TXT_MaxStringLength(int len)
     return len - 1;
 }
 
+#endif
+
+#ifdef USE_RUST_DEH_MAIN
+
+static int RustGetChar(void *context)
+{
+    return DEH_GetChar(context);
+}
+
+static void RustWarnParseError(void *context)
+{
+    DEH_Warning(context, "Parse error on section start");
+}
+
+static void RustErrorReplacementTooLong(void *context)
+{
+    DEH_Error(context, "Replacement string is longer than the maximum "
+                       "possible in doom.exe");
+}
+
+static void RustAddStringReplacement(const char *from_text,
+                                     const char *to_text)
+{
+    DEH_AddStringReplacement(from_text, to_text);
+}
+
+#endif
+
 static void *DEH_TextStart(deh_context_t *context, char *line)
 {
+#ifdef USE_RUST_DEH_MAIN
+    return cdoom_rust_deh_text_start(context, line, deh_allow_long_strings,
+                                     RustGetChar, RustWarnParseError,
+                                     RustErrorReplacementTooLong,
+                                     RustAddStringReplacement);
+#else
     char *from_text, *to_text;
     int fromlen, tolen;
     int i;
@@ -94,6 +134,7 @@ static void *DEH_TextStart(deh_context_t *context, char *line)
     free(to_text);
 
     return NULL;
+#endif
 }
 
 static void DEH_TextParseLine(deh_context_t *context, char *line, void *tag)
