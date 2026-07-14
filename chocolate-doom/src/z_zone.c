@@ -24,6 +24,124 @@
 
 #include "z_zone.h"
 
+#ifdef USE_RUST_Z_ZONE
+
+#include "cdoom_rust.h"
+
+void Z_Init(void)
+{
+    int size;
+    void *zone;
+
+    zone = I_ZoneBase(&size);
+
+    if (!cdoom_rust_z_init(zone,
+                           size,
+                           M_ParmExists("-zonezero"),
+                           M_ParmExists("-zonescan")))
+    {
+        I_Error("Z_Init: failed to initialize Rust zone allocator");
+    }
+
+    printf("zone memory: Using Rust zone allocator.\n");
+}
+
+void *Z_Malloc(int size, int tag, void *user)
+{
+    void *result;
+
+    if (user == NULL && tag >= PU_PURGELEVEL)
+    {
+        I_Error("Z_Malloc: an owner is required for purgable blocks");
+    }
+
+    result = cdoom_rust_z_malloc(size, tag, user);
+
+    if (result == NULL)
+    {
+        I_Error("Z_Malloc: failed on allocation of %i bytes", size);
+    }
+
+    return result;
+}
+
+void Z_Free(void *ptr)
+{
+    if (!cdoom_rust_z_free(ptr))
+    {
+        I_Error("Z_Free: freed a pointer without ZONEID");
+    }
+}
+
+void Z_FreeTags(int lowtag, int hightag)
+{
+    cdoom_rust_z_free_tags(lowtag, hightag);
+}
+
+void Z_DumpHeap(int lowtag, int hightag)
+{
+    printf("zone size: %u  location: Rust zone allocator\n", Z_ZoneSize());
+    printf("tag range: %i to %i\n", lowtag, hightag);
+    printf("Rust heap block dump is available through cdoom-verify parity tests.\n");
+}
+
+void Z_FileDumpHeap(FILE *f)
+{
+    fprintf(f,
+            "zone size: %u  location: Rust zone allocator\n",
+            Z_ZoneSize());
+    fprintf(f,
+            "Rust heap block dump is available through cdoom-verify parity tests.\n");
+}
+
+void Z_CheckHeap(void)
+{
+    if (!cdoom_rust_z_check_heap())
+    {
+        I_Error("Z_CheckHeap: Rust zone heap corruption detected");
+    }
+}
+
+void Z_ChangeTag2(void *ptr, int tag, const char *file, int line)
+{
+    int status;
+
+    status = cdoom_rust_z_change_tag(ptr, tag);
+
+    if (status < 0)
+    {
+        I_Error("%s:%i: Z_ChangeTag: an owner is required "
+                "for purgable blocks",
+                file,
+                line);
+    }
+
+    if (!status)
+    {
+        I_Error("%s:%i: Z_ChangeTag: block without a ZONEID!", file, line);
+    }
+}
+
+void Z_ChangeUser(void *ptr, void **user)
+{
+    if (!cdoom_rust_z_change_user(ptr, user))
+    {
+        I_Error("Z_ChangeUser: Tried to change user for invalid block!");
+    }
+}
+
+int Z_FreeMemory(void)
+{
+    return cdoom_rust_z_free_memory();
+}
+
+unsigned int Z_ZoneSize(void)
+{
+    return cdoom_rust_z_zone_size();
+}
+
+#else
+
 
 //
 // ZONE MEMORY ALLOCATION
@@ -550,3 +668,4 @@ unsigned int Z_ZoneSize(void)
     return mainzone->size;
 }
 
+#endif
