@@ -29,6 +29,10 @@
 #include "m_misc.h"
 #include "m_argv.h"  // haleyjd 20110212: warning fix
 
+#ifdef ENABLE_CDOOM_RUST
+#include "cdoom_rust.h"
+#endif
+
 int		myargc;
 char**		myargv;
 
@@ -45,6 +49,9 @@ char**		myargv;
 
 int M_CheckParmWithArgs(const char *check, int num_args)
 {
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_ARGV)
+    return cdoom_rust_m_check_parm_with_args(myargc, myargv, check, num_args);
+#else
     int i;
 
     // Check if myargv[i] has been set to NULL in LoadResponseFile(),
@@ -57,6 +64,7 @@ int M_CheckParmWithArgs(const char *check, int num_args)
     }
 
     return 0;
+#endif
 }
 
 //
@@ -273,6 +281,24 @@ static void LoadResponseFile(int argv_index, const char *filename)
 
 void M_FindResponseFile(void)
 {
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_ARGV)
+    char *error_message = NULL;
+    int missing_file = 0;
+
+    if (cdoom_rust_m_find_response_file(&myargc, &myargv,
+                                        &error_message, &missing_file) != 0)
+    {
+        if (missing_file)
+        {
+            printf ("\nNo such response file!");
+            exit(1);
+        }
+
+        I_Error("%s", error_message == NULL
+                      ? "Failed to load response file."
+                      : error_message);
+    }
+#else
     int i;
 
     for (i = 1; i < myargc; i++)
@@ -306,6 +332,7 @@ void M_FindResponseFile(void)
         myargv[i] = M_StringDuplicate("-_");
         LoadResponseFile(i + 1, myargv[i + 1]);
     }
+#endif
 }
 
 #if defined(_WIN32)
@@ -541,16 +568,31 @@ void M_AddLooseFiles(void)
 
 const char *M_GetExecutableName(void)
 {
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_ARGV)
+    return cdoom_rust_m_get_executable_name(myargv[0]);
+#else
     return M_BaseName(myargv[0]);
+#endif
 }
 
 char *exedir = NULL;
 
 void M_SetExeDir(void)
 {
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_ARGV)
+    char *error_message = NULL;
+
+    if (cdoom_rust_m_set_exe_dir(myargv[0], &exedir, &error_message) != 0)
+    {
+        I_Error("%s", error_message == NULL
+                      ? "Failed to set executable directory."
+                      : error_message);
+    }
+#else
     char *dirname;
 
     dirname = M_DirName(myargv[0]);
     exedir = M_StringJoin(dirname, DIR_SEPARATOR_S, NULL);
     free(dirname);
+#endif
 }
