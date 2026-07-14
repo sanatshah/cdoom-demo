@@ -31,6 +31,10 @@
 #include "w_wad.h"
 #include "z_zone.h"
 
+#ifdef USE_RUST_D_IWAD
+#include "cdoom_rust.h"
+#endif
+
 static const iwad_t iwads[] =
 {
     { "doom2.wad",    doom2,     commercial, "Doom II" },
@@ -53,6 +57,9 @@ static const iwad_t iwads[] =
 
 boolean D_IsIWADName(const char *name)
 {
+#ifdef USE_RUST_D_IWAD
+    return cdoom_rust_is_iwad_name(name);
+#else
     int i;
 
     for (i = 0; i < arrlen(iwads); i++)
@@ -64,6 +71,7 @@ boolean D_IsIWADName(const char *name)
     }
 
     return false;
+#endif
 }
 
 // Array of locations to search for IWAD files
@@ -976,6 +984,9 @@ const iwad_t **D_FindAllIWADs(int mask)
 
 const char *D_SaveGameIWADName(GameMission_t gamemission, GameVariant_t gamevariant)
 {
+#ifdef USE_RUST_D_IWAD
+    return cdoom_rust_save_game_iwad_name(gamemission, gamevariant);
+#else
     size_t i;
 
     // Determine the IWAD name to use for savegames.
@@ -1012,10 +1023,14 @@ const char *D_SaveGameIWADName(GameMission_t gamemission, GameVariant_t gamevari
     // Default fallback:
 
     return "unknown.wad";
+#endif
 }
 
 const char *D_SuggestIWADName(GameMission_t mission, GameMode_t mode)
 {
+#ifdef USE_RUST_D_IWAD
+    return cdoom_rust_suggest_iwad_name(mission, mode);
+#else
     int i;
 
     for (i = 0; i < arrlen(iwads); ++i)
@@ -1027,10 +1042,14 @@ const char *D_SuggestIWADName(GameMission_t mission, GameMode_t mode)
     }
 
     return "unknown.wad";
+#endif
 }
 
 const char *D_SuggestGameName(GameMission_t mission, GameMode_t mode)
 {
+#ifdef USE_RUST_D_IWAD
+    return cdoom_rust_suggest_game_name(mission, mode);
+#else
     int i;
 
     for (i = 0; i < arrlen(iwads); ++i)
@@ -1043,5 +1062,6 @@ const char *D_SuggestGameName(GameMission_t mission, GameMode_t mode)
     }
 
     return "Unknown game?";
+#endif
 }
 
