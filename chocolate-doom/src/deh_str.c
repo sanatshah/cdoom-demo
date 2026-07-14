@@ -26,11 +26,29 @@
 
 #include "z_zone.h"
 
+#ifdef USE_RUST_DEH_MAIN
+#include "cdoom_rust.h"
+#endif
+
 typedef struct 
 {
     char *from_text;
     char *to_text;
 } deh_substitution_t;
+
+#ifdef USE_RUST_DEH_MAIN
+
+const char *DEH_String(const char *s)
+{
+    return cdoom_rust_deh_string(s);
+}
+
+void DEH_AddStringReplacement(const char *from_text, const char *to_text)
+{
+    cdoom_rust_deh_add_string_replacement(from_text, to_text);
+}
+
+#else
 
 static deh_substitution_t **hash_table = NULL;
 static int hash_table_entries;
@@ -204,6 +222,8 @@ void DEH_AddStringReplacement(const char *from_text, const char *to_text)
         DEH_AddToHashtable(sub);
     }
 }
+
+#endif
 
 typedef enum
 {
