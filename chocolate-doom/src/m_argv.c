@@ -84,6 +84,8 @@ int M_CheckParm(const char *check)
     return M_CheckParmWithArgs(check, 0);
 }
 
+#if !defined(ENABLE_CDOOM_RUST) || !defined(USE_RUST_M_ARGV)
+
 #define MAXARGVS        100
 
 static void LoadResponseFile(int argv_index, const char *filename)
@@ -274,6 +276,8 @@ static void LoadResponseFile(int argv_index, const char *filename)
     }
 #endif
 }
+
+#endif
 
 //
 // Find a Response File
