@@ -31,6 +31,26 @@
 #include "doomtype.h"
 #include "i_swap.h"
 
+#ifdef USE_RUST_AES_PRNG
+#include "cdoom_rust.h"
+
+void PRNG_Start(prng_seed_t key)
+{
+    cdoom_rust_prng_start(key);
+}
+
+void PRNG_Stop(void)
+{
+    cdoom_rust_prng_stop();
+}
+
+unsigned int PRNG_Random(void)
+{
+    return cdoom_rust_prng_random();
+}
+
+#else
+
 /*
  * Cryptographic API.
  *
@@ -954,3 +974,4 @@ unsigned int PRNG_Random(void)
     return result;
 }
 
+#endif

@@ -39,6 +39,36 @@
 #include "i_swap.h"
 #include "sha1.h"
 
+#ifdef USE_RUST_SHA1
+#include "cdoom_rust.h"
+
+void SHA1_Init(sha1_context_t *hd)
+{
+    cdoom_rust_sha1_init(hd);
+}
+
+void SHA1_Update(sha1_context_t *hd, byte *inbuf, size_t inlen)
+{
+    cdoom_rust_sha1_update(hd, inbuf, inlen);
+}
+
+void SHA1_Final(sha1_digest_t digest, sha1_context_t *hd)
+{
+    cdoom_rust_sha1_final(digest, hd);
+}
+
+void SHA1_UpdateInt32(sha1_context_t *context, unsigned int val)
+{
+    cdoom_rust_sha1_update_int32(context, val);
+}
+
+void SHA1_UpdateString(sha1_context_t *context, char *str)
+{
+    cdoom_rust_sha1_update_string(context, str);
+}
+
+#else
+
 void SHA1_Init(sha1_context_t *hd)
 {
     hd->h0 = 0x67452301;
@@ -319,3 +349,4 @@ void SHA1_UpdateString(sha1_context_t *context, char *str)
     SHA1_Update(context, (byte *) str, strlen(str) + 1);
 }
 
+#endif
