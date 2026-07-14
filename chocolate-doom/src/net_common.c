@@ -30,6 +30,9 @@
 #include "net_io.h"
 #include "net_packet.h"
 #include "net_structrw.h"
+#ifdef USE_RUST_NET_COMMON
+#include "cdoom_rust.h"
+#endif
 
 // connections time out after 30 seconds
 
@@ -412,6 +415,9 @@ net_packet_t *NET_Conn_NewReliable(net_connection_t *conn, int packet_type)
 
 unsigned int NET_ExpandTicNum(unsigned int relative, unsigned int b)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_expand_tic_num(relative, b);
+#else
     unsigned int l, h;
     unsigned int result;
 
@@ -426,6 +432,7 @@ unsigned int NET_ExpandTicNum(unsigned int relative, unsigned int b)
         result += 0x100;
     
     return result;
+#endif
 }
 
 // Check that game settings are valid

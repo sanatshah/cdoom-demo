@@ -54,6 +54,10 @@ else()
 endif()
 
 target_link_libraries("${PROGRAM_PREFIX}server" ${SDL_LINK_LIBS})
+if(ENABLE_CDOOM_RUST)
+    target_link_libraries("${PROGRAM_PREFIX}server" cdoom_rust)
+    cdoom_rust_link("${PROGRAM_PREFIX}server")
+endif()
 set_target_properties("${PROGRAM_PREFIX}server" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 set_target_properties("${PROGRAM_PREFIX}server" PROPERTIES LINK_FLAGS "${SDL_FLAGS}")
 
@@ -257,6 +261,10 @@ endif()
 target_include_directories("${PROGRAM_PREFIX}setup"
                            PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
 target_link_libraries("${PROGRAM_PREFIX}setup" ${SDL_LINK_LIBS} setup textscreen)
+if(ENABLE_CDOOM_RUST)
+    target_link_libraries("${PROGRAM_PREFIX}setup" cdoom_rust)
+    cdoom_rust_link("${PROGRAM_PREFIX}setup")
+endif()
 set_target_properties("${PROGRAM_PREFIX}setup" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 
 if(WIN32)

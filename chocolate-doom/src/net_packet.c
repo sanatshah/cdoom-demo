@@ -20,6 +20,9 @@
 #include "m_misc.h"
 #include "net_packet.h"
 #include "z_zone.h"
+#ifdef USE_RUST_NET_COMMON
+#include "cdoom_rust.h"
+#endif
 
 static int total_packet_memory = 0;
 
@@ -72,6 +75,10 @@ void NET_FreePacket(net_packet_t *packet)
 
 boolean NET_ReadInt8(net_packet_t *packet, unsigned int *data)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_read_int8(packet->data, packet->len,
+                                    &packet->pos, data);
+#else
     if (packet->pos + 1 > packet->len)
         return false;
 
@@ -80,6 +87,7 @@ boolean NET_ReadInt8(net_packet_t *packet, unsigned int *data)
     packet->pos += 1;
 
     return true;
+#endif
 }
 
 // Read a 16-bit integer from the packet, returning true if read
@@ -87,6 +95,10 @@ boolean NET_ReadInt8(net_packet_t *packet, unsigned int *data)
 
 boolean NET_ReadInt16(net_packet_t *packet, unsigned int *data)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_read_int16(packet->data, packet->len,
+                                     &packet->pos, data);
+#else
     byte *p;
 
     if (packet->pos + 2 > packet->len)
@@ -98,6 +110,7 @@ boolean NET_ReadInt16(net_packet_t *packet, unsigned int *data)
     packet->pos += 2;
 
     return true;
+#endif
 }
 
 // Read a 32-bit integer from the packet, returning true if read
@@ -105,6 +118,10 @@ boolean NET_ReadInt16(net_packet_t *packet, unsigned int *data)
 
 boolean NET_ReadInt32(net_packet_t *packet, unsigned int *data)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_read_int32(packet->data, packet->len,
+                                     &packet->pos, data);
+#else
     byte *p;
 
     if (packet->pos + 4 > packet->len)
@@ -116,12 +133,17 @@ boolean NET_ReadInt32(net_packet_t *packet, unsigned int *data)
     packet->pos += 4;
     
     return true;
+#endif
 }
 
 // Signed read functions
 
 boolean NET_ReadSInt8(net_packet_t *packet, signed int *data)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_read_sint8(packet->data, packet->len,
+                                     &packet->pos, data);
+#else
     if (NET_ReadInt8(packet,(unsigned int *) data))
     {
         if (*data & (1 << 7))
@@ -135,10 +157,15 @@ boolean NET_ReadSInt8(net_packet_t *packet, signed int *data)
     {
         return false;
     }
+#endif
 }
 
 boolean NET_ReadSInt16(net_packet_t *packet, signed int *data)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_read_sint16(packet->data, packet->len,
+                                      &packet->pos, data);
+#else
     if (NET_ReadInt16(packet, (unsigned int *) data))
     {
         if (*data & (1 << 15))
@@ -152,10 +179,15 @@ boolean NET_ReadSInt16(net_packet_t *packet, signed int *data)
     {
         return false;
     }
+#endif
 }
 
 boolean NET_ReadSInt32(net_packet_t *packet, signed int *data)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_read_sint32(packet->data, packet->len,
+                                      &packet->pos, data);
+#else
     if (NET_ReadInt32(packet, (unsigned int *) data))
     {
         if (*data & (1U << 31))
@@ -169,6 +201,7 @@ boolean NET_ReadSInt32(net_packet_t *packet, signed int *data)
     {
         return false;
     }
+#endif
 }
 
 // Read a string from the packet.  Returns NULL if a terminating 
@@ -258,17 +291,38 @@ static void NET_IncreasePacket(net_packet_t *packet)
 
 void NET_WriteInt8(net_packet_t *packet, unsigned int i)
 {
+#ifdef USE_RUST_NET_COMMON
+    if (packet->len + 1 > packet->alloced)
+        NET_IncreasePacket(packet);
+
+    if (cdoom_rust_net_write_int8(packet->data + packet->len,
+                                  packet->alloced - packet->len, i))
+    {
+        packet->len += 1;
+    }
+#else
     if (packet->len + 1 > packet->alloced)
         NET_IncreasePacket(packet);
 
     packet->data[packet->len] = i;
     packet->len += 1;
+#endif
 }
 
 // Write a 16-bit integer to the packet
 
 void NET_WriteInt16(net_packet_t *packet, unsigned int i)
 {
+#ifdef USE_RUST_NET_COMMON
+    if (packet->len + 2 > packet->alloced)
+        NET_IncreasePacket(packet);
+
+    if (cdoom_rust_net_write_int16(packet->data + packet->len,
+                                   packet->alloced - packet->len, i))
+    {
+        packet->len += 2;
+    }
+#else
     byte *p;
     
     if (packet->len + 2 > packet->alloced)
@@ -280,6 +334,7 @@ void NET_WriteInt16(net_packet_t *packet, unsigned int i)
     p[1] = i & 0xff;
 
     packet->len += 2;
+#endif
 }
 
 
@@ -287,6 +342,16 @@ void NET_WriteInt16(net_packet_t *packet, unsigned int i)
 
 void NET_WriteInt32(net_packet_t *packet, unsigned int i)
 {
+#ifdef USE_RUST_NET_COMMON
+    if (packet->len + 4 > packet->alloced)
+        NET_IncreasePacket(packet);
+
+    if (cdoom_rust_net_write_int32(packet->data + packet->len,
+                                   packet->alloced - packet->len, i))
+    {
+        packet->len += 4;
+    }
+#else
     byte *p;
 
     if (packet->len + 4 > packet->alloced)
@@ -300,6 +365,7 @@ void NET_WriteInt32(net_packet_t *packet, unsigned int i)
     p[3] = i & 0xff;
 
     packet->len += 4;
+#endif
 }
 
 void NET_WriteString(net_packet_t *packet, const char *string)

@@ -23,9 +23,13 @@
 #include "m_misc.h"
 #include "net_packet.h"
 #include "net_structrw.h"
+#ifdef USE_RUST_NET_COMMON
+#include "cdoom_rust.h"
+#endif
 
 // String names for the enum values in net_protocol_t, which are what is
 // sent over the wire. Every enum value must have an entry in this list.
+#ifndef USE_RUST_NET_COMMON
 static struct
 {
     net_protocol_t protocol;
@@ -33,6 +37,7 @@ static struct
 } protocol_names[] = {
     {NET_PROTOCOL_CHOCOLATE_DOOM_0, "CHOCOLATE_DOOM_0"},
 };
+#endif
 
 void NET_WriteConnectData(net_packet_t *packet, net_connect_data_t *data)
 {
@@ -570,6 +575,9 @@ void NET_WritePRNGSeed(net_packet_t *packet, prng_seed_t seed)
 
 static net_protocol_t ParseProtocolName(const char *name)
 {
+#ifdef USE_RUST_NET_COMMON
+    return cdoom_rust_net_parse_protocol_name(name);
+#else
     int i;
 
     for (i = 0; i < arrlen(protocol_names); ++i)
@@ -581,6 +589,7 @@ static net_protocol_t ParseProtocolName(const char *name)
     }
 
     return NET_PROTOCOL_UNKNOWN;
+#endif
 }
 
 // NET_ReadProtocol reads a single string-format protocol name from the given
@@ -602,6 +611,16 @@ net_protocol_t NET_ReadProtocol(net_packet_t *packet)
 // NET_WriteProtocol writes a single string-format protocol name to a packet.
 void NET_WriteProtocol(net_packet_t *packet, net_protocol_t protocol)
 {
+#ifdef USE_RUST_NET_COMMON
+    const char *name;
+
+    name = cdoom_rust_net_protocol_name(protocol);
+    if (name != NULL)
+    {
+        NET_WriteString(packet, name);
+        return;
+    }
+#else
     int i;
 
     for (i = 0; i < arrlen(protocol_names); ++i)
@@ -612,6 +631,7 @@ void NET_WriteProtocol(net_packet_t *packet, net_protocol_t protocol)
             return;
         }
     }
+#endif
 
     // If you add an entry to the net_protocol_t enum, a corresponding entry
     // must be added to the protocol_names list.
