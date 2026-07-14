@@ -172,31 +172,19 @@ mod tests {
         let _guard = zone_test_guard();
         let _zone = ZoneFixture::new(8192);
         let mut cache_a = owner_slot();
-        let mut cache_b = owner_slot();
-        let mut cache_c = owner_slot();
 
         let _a = cdoom_core::cdoom_rust_z_malloc(
-            1024,
+            4096,
             PU_CACHE,
             (&mut cache_a as *mut *mut c_void).cast(),
         );
         let _static = cdoom_core::cdoom_rust_z_malloc(1024, PU_STATIC, null_mut());
-        let _b = cdoom_core::cdoom_rust_z_malloc(
-            1024,
-            PU_CACHE,
-            (&mut cache_b as *mut *mut c_void).cast(),
-        );
-        let _c = cdoom_core::cdoom_rust_z_malloc(
-            1024,
-            PU_CACHE,
-            (&mut cache_c as *mut *mut c_void).cast(),
-        );
 
-        let large = cdoom_core::cdoom_rust_z_malloc(5000, PU_STATIC, null_mut());
+        let large = cdoom_core::cdoom_rust_z_malloc(3500, PU_STATIC, null_mut());
 
         assert!(!large.is_null());
         assert!(cdoom_core::cdoom_rust_z_purge_count() > 0);
-        assert!(cache_a.is_null() || cache_b.is_null() || cache_c.is_null());
+        assert!(cache_a.is_null());
         assert_eq!(cdoom_core::cdoom_rust_z_check_heap(), 1);
     }
 
@@ -225,7 +213,7 @@ mod tests {
     #[test]
     fn z_zone_wad_loader_style_trace_matches_expected_counts() {
         let _guard = zone_test_guard();
-        let _zone = ZoneFixture::new(8192);
+        let _zone = ZoneFixture::new(6144);
         cdoom_core::cdoom_rust_z_reset_stats();
         let mut cache_owners = [owner_slot(), owner_slot(), owner_slot()];
         let mut level_owner = owner_slot();
@@ -234,27 +222,27 @@ mod tests {
         let directory = cdoom_core::cdoom_rust_z_malloc(512, PU_STATIC, null_mut());
         let lumpinfo = cdoom_core::cdoom_rust_z_malloc(768, PU_STATIC, null_mut());
         let cache_0 = cdoom_core::cdoom_rust_z_malloc(
-            768,
+            3000,
             PU_CACHE,
             (&mut cache_owners[0] as *mut *mut c_void).cast(),
         );
         let cache_1 = cdoom_core::cdoom_rust_z_malloc(
-            768,
+            128,
             PU_CACHE,
             (&mut cache_owners[1] as *mut *mut c_void).cast(),
         );
         let cache_2 = cdoom_core::cdoom_rust_z_malloc(
-            768,
+            128,
             PU_CACHE,
             (&mut cache_owners[2] as *mut *mut c_void).cast(),
         );
         let level = cdoom_core::cdoom_rust_z_malloc(
-            384,
+            128,
             PU_LEVEL,
             (&mut level_owner as *mut *mut c_void).cast(),
         );
         let levspec = cdoom_core::cdoom_rust_z_malloc(
-            384,
+            128,
             PU_LEVSPEC,
             (&mut levspec_owner as *mut *mut c_void).cast(),
         );
@@ -268,7 +256,7 @@ mod tests {
         assert!(!levspec.is_null());
 
         cdoom_core::cdoom_rust_z_free_tags(PU_LEVEL, PU_LEVSPEC);
-        let late_static = cdoom_core::cdoom_rust_z_malloc(5200, PU_STATIC, null_mut());
+        let late_static = cdoom_core::cdoom_rust_z_malloc(2800, PU_STATIC, null_mut());
 
         assert!(!late_static.is_null());
         assert!(level_owner.is_null());
@@ -276,8 +264,8 @@ mod tests {
         assert_eq!(cdoom_core::cdoom_rust_z_alloc_count(), 8);
         assert_eq!(cdoom_core::cdoom_rust_z_free_count(), 2);
         assert_eq!(cdoom_core::cdoom_rust_z_free_tags_count(), 1);
-        assert!(cdoom_core::cdoom_rust_z_purge_count() >= 1);
-        assert!(cache_owners.iter().any(|owner| owner.is_null()));
+        assert_eq!(cdoom_core::cdoom_rust_z_purge_count(), 1);
+        assert!(cache_owners[0].is_null());
         assert_eq!(cdoom_core::cdoom_rust_z_check_heap(), 1);
     }
 }
