@@ -3,9 +3,7 @@
 //! Each new Rust module should add parity checks here (or as integration tests)
 //! before flipping the CMake feature flag that routes production code through Rust.
 
-use std::ffi::c_void;
-use std::ffi::{CStr, CString};
-use std::os::raw::{c_char, c_int};
+use std::ffi::CStr;
 use std::path::Path;
 
 /// Expected Chocolate Doom package version vendored in this repo.
@@ -31,6 +29,9 @@ pub fn rust_version_from_ffi() -> String {
 mod tests {
     use super::*;
     use cdoom_core::m_cheat::{CheatSeq, MAX_CHEAT_LEN, MAX_CHEAT_PARAMS};
+    use std::ffi::c_void;
+    use std::ffi::CString;
+    use std::os::raw::{c_char, c_int};
 
     fn c_char(byte: u8) -> c_char {
         byte as c_char
