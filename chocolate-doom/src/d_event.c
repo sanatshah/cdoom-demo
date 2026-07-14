@@ -22,6 +22,21 @@
 #include <stdlib.h>
 #include "d_event.h"
 
+#ifdef USE_RUST_D_EVENT
+#include "cdoom_rust.h"
+
+void D_PostEvent (event_t* ev)
+{
+    cdoom_rust_post_event(ev);
+}
+
+event_t *D_PopEvent(void)
+{
+    return (event_t *) cdoom_rust_pop_event();
+}
+
+#else
+
 #define MAXEVENTS 64
 
 static event_t events[MAXEVENTS];
@@ -61,3 +76,4 @@ event_t *D_PopEvent(void)
 }
 
 
+#endif
