@@ -2,8 +2,10 @@
 //!
 //! New subsystems land here as modules with a thin C ABI in [`ffi`].
 
+pub mod d_dedicated;
 pub mod d_event;
 pub mod d_iwad;
+pub mod d_loop;
 pub mod d_mode;
 pub mod d_ticcmd;
 
@@ -15,8 +17,13 @@ pub fn version_string() -> &'static str {
 }
 
 pub use ffi::{
-    cdoom_rust_game_mission_string, cdoom_rust_game_mode_string, cdoom_rust_get_num_episodes,
-    cdoom_rust_init, cdoom_rust_is_episode_map, cdoom_rust_is_iwad_name, cdoom_rust_pop_event,
+    cdoom_rust_d_loop_get_low_tic, cdoom_rust_d_loop_nonvanilla_playback_decision,
+    cdoom_rust_d_loop_nonvanilla_record_allowed, cdoom_rust_d_loop_players_in_game,
+    cdoom_rust_d_loop_single_player_clear, cdoom_rust_d_loop_ticdup_squash,
+    cdoom_rust_dedicated_main, cdoom_rust_dedicated_net_client_run,
+    cdoom_rust_dedicated_rejected_option, cdoom_rust_game_mission_string,
+    cdoom_rust_game_mode_string, cdoom_rust_get_num_episodes, cdoom_rust_init,
+    cdoom_rust_is_episode_map, cdoom_rust_is_iwad_name, cdoom_rust_pop_event,
     cdoom_rust_post_event, cdoom_rust_save_game_iwad_name, cdoom_rust_suggest_game_name,
     cdoom_rust_suggest_iwad_name, cdoom_rust_valid_episode_map, cdoom_rust_valid_game_mode,
     cdoom_rust_valid_game_version, cdoom_rust_version,

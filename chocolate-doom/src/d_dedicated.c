@@ -27,21 +27,39 @@
 #include "net_server.h"
 #include "z_zone.h"
 
+#ifdef USE_RUST_D_DEDICATED
+#include "cdoom_rust.h"
+
+static void PrintDedicatedBanner(void)
+{
+    printf(PACKAGE_NAME " standalone dedicated server\n");
+}
+#endif
+
 void NET_CL_Run(void)
 {
+#ifdef USE_RUST_D_DEDICATED
+    cdoom_rust_dedicated_net_client_run();
+#else
     // No client present :-)
     //
     // This is here because the server code sometimes runs this 
     // to let the client do some processing if it needs to.
     // In a standalone dedicated server, we don't have a client.
+#endif
 }
 
 void D_DoomMain(void)
 {
+#ifdef USE_RUST_D_DEDICATED
+    cdoom_rust_dedicated_main(PrintDedicatedBanner, Z_Init,
+                              NET_DedicatedServer);
+#else
     printf(PACKAGE_NAME " standalone dedicated server\n");
 
     Z_Init();
 
     NET_DedicatedServer();
+#endif
 }
 
