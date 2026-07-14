@@ -185,7 +185,7 @@ pub unsafe fn fseek(stream: *mut c_void, position: i64, whence: i32) -> i32 {
     let newpos = match whence {
         0 => (position as i32) as u32,
         1 => ((i64::from(file.position)).wrapping_add(position) as i32) as u32,
-        2 => ((file.buflen as u64).wrapping_add(position as u64) as u32),
+        2 => (file.buflen as u64).wrapping_add(position as u64) as u32,
         _ => return -1,
     };
 

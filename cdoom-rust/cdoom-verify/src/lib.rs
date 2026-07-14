@@ -5,7 +5,6 @@
 
 use std::ffi::CStr;
 use std::path::Path;
-use std::ptr;
 
 /// Expected Chocolate Doom package version vendored in this repo.
 pub const CHOCOLATE_DOOM_VERSION: &str = "3.1.1";
@@ -29,6 +28,7 @@ pub fn rust_version_from_ffi() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ptr;
 
     #[test]
     fn ffi_version_matches_crate() {
@@ -97,16 +97,10 @@ mod tests {
         let mut digest = [0_u8; cdoom_core::sha1::DIGEST_LEN];
 
         unsafe {
-            cdoom_core::cdoom_rust_sha1_init((&mut context as *mut _).cast());
-            cdoom_core::cdoom_rust_sha1_update(
-                (&mut context as *mut _).cast(),
-                b"abc".as_ptr().cast(),
-                3,
-            );
-            cdoom_core::cdoom_rust_sha1_final(
-                digest.as_mut_ptr().cast(),
-                (&mut context as *mut _).cast(),
-            );
+            let context_ptr = (&mut context as *mut cdoom_core::sha1::Sha1Context).cast();
+            cdoom_core::cdoom_rust_sha1_init(context_ptr);
+            cdoom_core::cdoom_rust_sha1_update(context_ptr, b"abc".as_ptr().cast(), 3);
+            cdoom_core::cdoom_rust_sha1_final(digest.as_mut_ptr().cast(), context_ptr);
         }
         assert_eq!(
             digest,
@@ -118,15 +112,10 @@ mod tests {
 
         let mut via_helpers = cdoom_core::sha1::Sha1Context::default();
         unsafe {
-            cdoom_core::cdoom_rust_sha1_update_int32((&mut via_helpers as *mut _).cast(), 17);
-            cdoom_core::cdoom_rust_sha1_update_string(
-                (&mut via_helpers as *mut _).cast(),
-                c"PLAYPAL".as_ptr(),
-            );
-            cdoom_core::cdoom_rust_sha1_final(
-                digest.as_mut_ptr().cast(),
-                (&mut via_helpers as *mut _).cast(),
-            );
+            let context_ptr = (&mut via_helpers as *mut cdoom_core::sha1::Sha1Context).cast();
+            cdoom_core::cdoom_rust_sha1_update_int32(context_ptr, 17);
+            cdoom_core::cdoom_rust_sha1_update_string(context_ptr, c"PLAYPAL".as_ptr());
+            cdoom_core::cdoom_rust_sha1_final(digest.as_mut_ptr().cast(), context_ptr);
         }
 
         assert_eq!(
