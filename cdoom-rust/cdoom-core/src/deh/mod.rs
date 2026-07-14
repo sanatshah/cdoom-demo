@@ -246,31 +246,21 @@ pub unsafe fn get_char(
         (*context_fields).linenum += 1;
     }
 
+    let mut last_was_cr = false;
     let mut result;
-    let mut last_was_cr;
 
     loop {
         result = read_raw_char(context);
 
-        if last_was_cr {
-            // This branch is only reachable after at least one loop iteration.
-        }
-
-        // Keep this state outside the loop in the C-equivalent way.
-        break;
-    }
-
-    last_was_cr = result == b'\r' as c_int;
-
-    while last_was_cr {
-        result = read_raw_char(context);
-
-        if result != b'\n' as c_int {
+        if last_was_cr && result != b'\n' as c_int {
             unread_raw_char(context, result);
             return b'\r' as c_int;
         }
 
         last_was_cr = result == b'\r' as c_int;
+        if !last_was_cr {
+            break;
+        }
     }
 
     (*context_fields).last_was_newline = (result == b'\n' as c_int) as c_int;
