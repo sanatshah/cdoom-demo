@@ -39,6 +39,10 @@
 
 #include "z_zone.h"
 
+#ifdef USE_RUST_M_CONFIG
+#include "cdoom_rust.h"
+#endif
+
 //
 // DEFAULTS
 //
@@ -2165,6 +2169,9 @@ static void SaveDefaultCollection(default_collection_t *collection)
                 
                 v = *defaults[i].location.i;
 
+#ifdef USE_RUST_M_CONFIG
+                v = cdoom_rust_m_config_scan_from_key(v);
+#else
                 if (v == KEY_RSHIFT)
                 {
                     // Special case: for shift, force scan code for
@@ -2199,6 +2206,7 @@ static void SaveDefaultCollection(default_collection_t *collection)
                         }
                     }
                 }
+#endif
 
 	        fprintf(f, "%i", v);
                 break;
@@ -2230,6 +2238,9 @@ static void SaveDefaultCollection(default_collection_t *collection)
 
 static int ParseIntParameter(const char *strparm)
 {
+#ifdef USE_RUST_M_CONFIG
+    return cdoom_rust_m_config_parse_int_parameter(strparm);
+#else
     int parm;
 
     if (strparm[0] == '0' && strparm[1] == 'x')
@@ -2238,6 +2249,7 @@ static int ParseIntParameter(const char *strparm)
         sscanf(strparm, "%i", &parm);
 
     return parm;
+#endif
 }
 
 static void SetVariable(default_t *def, const char *value)
@@ -2264,6 +2276,9 @@ static void SetVariable(default_t *def, const char *value)
 
             intparm = ParseIntParameter(value);
             def->untranslated = intparm;
+#ifdef USE_RUST_M_CONFIG
+            intparm = cdoom_rust_m_config_key_from_scan(intparm);
+#else
             if (intparm >= 0 && intparm < 128)
             {
                 intparm = scantokey[intparm];
@@ -2272,6 +2287,7 @@ static void SetVariable(default_t *def, const char *value)
             {
                 intparm = 0;
             }
+#endif
 
             def->original_translated = intparm;
             *def->location.i = intparm;
@@ -2310,7 +2326,11 @@ static void SetVariable(default_t *def, const char *value)
                 }
             }
 
+#ifdef USE_RUST_M_CONFIG
+            *def->location.f = cdoom_rust_m_config_parse_float_parameter(value);
+#else
             *def->location.f = (float) atof(str);
+#endif
             free(str);
         }
             break;
@@ -2356,6 +2376,9 @@ static void LoadDefaultCollection(default_collection_t *collection)
             continue;
         }
 
+#ifdef USE_RUST_M_CONFIG
+        cdoom_rust_m_config_clean_config_value(strparm, sizeof(strparm));
+#else
         // Strip off trailing non-printable characters (\r characters
         // from DOS text files)
 
@@ -2371,6 +2394,7 @@ static void LoadDefaultCollection(default_collection_t *collection)
             strparm[strlen(strparm) - 1] = '\0';
             memmove(strparm, strparm + 1, sizeof(strparm) - 1);
         }
+#endif
 
         SetVariable(def, strparm);
     }

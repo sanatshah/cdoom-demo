@@ -22,6 +22,26 @@
 #include "m_config.h"
 #include "m_misc.h"
 
+#ifdef USE_RUST_M_CONTROLS
+#include "cdoom_rust.h"
+
+typedef struct
+{
+    const char *name;
+    int *location;
+} rust_control_binding_t;
+
+static void RustBindIntVariable(const char *name, int *location)
+{
+    M_BindIntVariable(name, location);
+}
+
+#define RUST_BIND_CONTROLS(bindings) \
+    cdoom_rust_m_controls_bind_ints((const void *) bindings, \
+                                    arrlen(bindings), \
+                                    RustBindIntVariable)
+#endif
+
 //
 // Keyboard controls
 //
@@ -229,6 +249,43 @@ int dclick_use = 1;
 
 void M_BindBaseControls(void)
 {
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[] = {
+        { "key_right",          &key_right },
+        { "key_left",           &key_left },
+        { "key_up",             &key_up },
+        { "key_down",           &key_down },
+        { "key_strafeleft",     &key_strafeleft },
+        { "key_straferight",    &key_straferight },
+        { "key_fire",           &key_fire },
+        { "key_use",            &key_use },
+        { "key_strafe",         &key_strafe },
+        { "key_speed",          &key_speed },
+        { "mouseb_fire",        &mousebfire },
+        { "mouseb_strafe",      &mousebstrafe },
+        { "mouseb_forward",     &mousebforward },
+        { "mouseb_speed",       &mousebspeed },
+        { "joyb_fire",          &joybfire },
+        { "joyb_strafe",        &joybstrafe },
+        { "joyb_use",           &joybuse },
+        { "joyb_speed",         &joybspeed },
+        { "joyb_menu_activate", &joybmenu },
+        { "joyb_toggle_automap", &joybautomap },
+        { "joyb_strafeleft",    &joybstrafeleft },
+        { "joyb_straferight",   &joybstraferight },
+        { "mouseb_strafeleft",  &mousebstrafeleft },
+        { "mouseb_straferight", &mousebstraferight },
+        { "mouseb_turnleft",    &mousebturnleft },
+        { "mouseb_turnright",   &mousebturnright },
+        { "mouseb_use",         &mousebuse },
+        { "mouseb_backward",    &mousebbackward },
+        { "dclick_use",         &dclick_use },
+        { "key_pause",          &key_pause },
+        { "key_message_refresh", &key_message_refresh },
+    };
+
+    RUST_BIND_CONTROLS(bindings);
+#else
     M_BindIntVariable("key_right",          &key_right);
     M_BindIntVariable("key_left",           &key_left);
     M_BindIntVariable("key_up",             &key_up);
@@ -266,10 +323,45 @@ void M_BindBaseControls(void)
     M_BindIntVariable("dclick_use",          &dclick_use);
     M_BindIntVariable("key_pause",           &key_pause);
     M_BindIntVariable("key_message_refresh", &key_message_refresh);
+#endif
 }
 
 void M_BindHereticControls(void)
 {
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[] = {
+        { "key_flyup",             &key_flyup },
+        { "key_flydown",           &key_flydown },
+        { "key_flycenter",         &key_flycenter },
+        { "key_lookup",            &key_lookup },
+        { "key_lookdown",          &key_lookdown },
+        { "key_lookcenter",        &key_lookcenter },
+        { "key_invleft",           &key_invleft },
+        { "key_invright",          &key_invright },
+        { "key_useartifact",       &key_useartifact },
+        { "mouseb_invleft",        &mousebinvleft },
+        { "mouseb_invright",       &mousebinvright },
+        { "mouseb_useartifact",    &mousebuseartifact },
+        { "joyb_invleft",          &joybinvleft },
+        { "joyb_invright",         &joybinvright },
+        { "joyb_useartifact",      &joybuseartifact },
+        { "joyb_flyup",            &joybflyup },
+        { "joyb_flydown",          &joybflydown },
+        { "joyb_flycenter",        &joybflycenter },
+        { "key_arti_quartz",       &key_arti_quartz },
+        { "key_arti_urn",          &key_arti_urn },
+        { "key_arti_bomb",         &key_arti_bomb },
+        { "key_arti_tome",         &key_arti_tome },
+        { "key_arti_ring",         &key_arti_ring },
+        { "key_arti_chaosdevice",  &key_arti_chaosdevice },
+        { "key_arti_shadowsphere", &key_arti_shadowsphere },
+        { "key_arti_wings",        &key_arti_wings },
+        { "key_arti_torch",        &key_arti_torch },
+        { "key_arti_morph",        &key_arti_morph },
+    };
+
+    RUST_BIND_CONTROLS(bindings);
+#else
     M_BindIntVariable("key_flyup",          &key_flyup);
     M_BindIntVariable("key_flydown",        &key_flydown);
     M_BindIntVariable("key_flycenter",      &key_flycenter);
@@ -304,10 +396,28 @@ void M_BindHereticControls(void)
     M_BindIntVariable("key_arti_wings",         &key_arti_wings);
     M_BindIntVariable("key_arti_torch",         &key_arti_torch);
     M_BindIntVariable("key_arti_morph",         &key_arti_morph);
+#endif
 }
 
 void M_BindHexenControls(void)
 {
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[] = {
+        { "key_jump",                 &key_jump },
+        { "mouseb_jump",              &mousebjump },
+        { "joyb_jump",                &joybjump },
+        { "key_arti_all",             &key_arti_all },
+        { "key_arti_health",          &key_arti_health },
+        { "key_arti_poisonbag",       &key_arti_poisonbag },
+        { "key_arti_blastradius",     &key_arti_blastradius },
+        { "key_arti_teleport",        &key_arti_teleport },
+        { "key_arti_teleportother",   &key_arti_teleportother },
+        { "key_arti_egg",             &key_arti_egg },
+        { "key_arti_invulnerability", &key_arti_invulnerability },
+    };
+
+    RUST_BIND_CONTROLS(bindings);
+#else
     M_BindIntVariable("key_jump",           &key_jump);
     M_BindIntVariable("mouseb_jump",        &mousebjump);
     M_BindIntVariable("joyb_jump",          &joybjump);
@@ -320,6 +430,7 @@ void M_BindHexenControls(void)
     M_BindIntVariable("key_arti_teleportother",   &key_arti_teleportother);
     M_BindIntVariable("key_arti_egg",             &key_arti_egg);
     M_BindIntVariable("key_arti_invulnerability", &key_arti_invulnerability);
+#endif
 }
 
 void M_BindStrifeControls(void)
@@ -334,6 +445,31 @@ void M_BindStrifeControls(void)
     key_invleft  = KEY_INS;
     key_invright = KEY_DEL;
 
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[] = {
+        { "key_jump",         &key_jump },
+        { "key_lookUp",       &key_lookup },
+        { "key_lookDown",     &key_lookdown },
+        { "key_invLeft",      &key_invleft },
+        { "key_invRight",     &key_invright },
+        { "key_useHealth",    &key_usehealth },
+        { "key_invquery",     &key_invquery },
+        { "key_mission",      &key_mission },
+        { "key_invPop",       &key_invpop },
+        { "key_invKey",       &key_invkey },
+        { "key_invHome",      &key_invhome },
+        { "key_invEnd",       &key_invend },
+        { "key_invUse",       &key_invuse },
+        { "key_invDrop",      &key_invdrop },
+        { "mouseb_jump",      &mousebjump },
+        { "joyb_jump",        &joybjump },
+        { "joyb_invleft",     &joybinvleft },
+        { "joyb_invright",    &joybinvright },
+        { "joyb_useartifact", &joybuseartifact },
+    };
+
+    RUST_BIND_CONTROLS(bindings);
+#else
     M_BindIntVariable("key_jump",           &key_jump);
     M_BindIntVariable("key_lookUp",         &key_lookup);
     M_BindIntVariable("key_lookDown",       &key_lookdown);
@@ -361,10 +497,31 @@ void M_BindStrifeControls(void)
     M_BindIntVariable("joyb_invright",      &joybinvright);
     // This is technically "invuse" in Strife, but let's reuse the value.
     M_BindIntVariable("joyb_useartifact",   &joybuseartifact);
+#endif
 }
 
 void M_BindWeaponControls(void)
 {
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[] = {
+        { "key_weapon1",       &key_weapon1 },
+        { "key_weapon2",       &key_weapon2 },
+        { "key_weapon3",       &key_weapon3 },
+        { "key_weapon4",       &key_weapon4 },
+        { "key_weapon5",       &key_weapon5 },
+        { "key_weapon6",       &key_weapon6 },
+        { "key_weapon7",       &key_weapon7 },
+        { "key_weapon8",       &key_weapon8 },
+        { "key_prevweapon",    &key_prevweapon },
+        { "key_nextweapon",    &key_nextweapon },
+        { "joyb_prevweapon",   &joybprevweapon },
+        { "joyb_nextweapon",   &joybnextweapon },
+        { "mouseb_prevweapon", &mousebprevweapon },
+        { "mouseb_nextweapon", &mousebnextweapon },
+    };
+
+    RUST_BIND_CONTROLS(bindings);
+#else
     M_BindIntVariable("key_weapon1",        &key_weapon1);
     M_BindIntVariable("key_weapon2",        &key_weapon2);
     M_BindIntVariable("key_weapon3",        &key_weapon3);
@@ -382,10 +539,29 @@ void M_BindWeaponControls(void)
 
     M_BindIntVariable("mouseb_prevweapon",  &mousebprevweapon);
     M_BindIntVariable("mouseb_nextweapon",  &mousebnextweapon);
+#endif
 }
 
 void M_BindMapControls(void)
 {
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[] = {
+        { "key_map_north",     &key_map_north },
+        { "key_map_south",     &key_map_south },
+        { "key_map_east",      &key_map_east },
+        { "key_map_west",      &key_map_west },
+        { "key_map_zoomin",    &key_map_zoomin },
+        { "key_map_zoomout",   &key_map_zoomout },
+        { "key_map_toggle",    &key_map_toggle },
+        { "key_map_maxzoom",   &key_map_maxzoom },
+        { "key_map_follow",    &key_map_follow },
+        { "key_map_grid",      &key_map_grid },
+        { "key_map_mark",      &key_map_mark },
+        { "key_map_clearmark", &key_map_clearmark },
+    };
+
+    RUST_BIND_CONTROLS(bindings);
+#else
     M_BindIntVariable("key_map_north",      &key_map_north);
     M_BindIntVariable("key_map_south",      &key_map_south);
     M_BindIntVariable("key_map_east",       &key_map_east);
@@ -398,10 +574,42 @@ void M_BindMapControls(void)
     M_BindIntVariable("key_map_grid",       &key_map_grid);
     M_BindIntVariable("key_map_mark",       &key_map_mark);
     M_BindIntVariable("key_map_clearmark",  &key_map_clearmark);
+#endif
 }
 
 void M_BindMenuControls(void)
 {
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[] = {
+        { "key_menu_activate",   &key_menu_activate },
+        { "key_menu_up",         &key_menu_up },
+        { "key_menu_down",       &key_menu_down },
+        { "key_menu_left",       &key_menu_left },
+        { "key_menu_right",      &key_menu_right },
+        { "key_menu_back",       &key_menu_back },
+        { "key_menu_forward",    &key_menu_forward },
+        { "key_menu_confirm",    &key_menu_confirm },
+        { "key_menu_abort",      &key_menu_abort },
+        { "key_menu_help",       &key_menu_help },
+        { "key_menu_save",       &key_menu_save },
+        { "key_menu_load",       &key_menu_load },
+        { "key_menu_volume",     &key_menu_volume },
+        { "key_menu_detail",     &key_menu_detail },
+        { "key_menu_qsave",      &key_menu_qsave },
+        { "key_menu_endgame",    &key_menu_endgame },
+        { "key_menu_messages",   &key_menu_messages },
+        { "key_menu_qload",      &key_menu_qload },
+        { "key_menu_quit",       &key_menu_quit },
+        { "key_menu_gamma",      &key_menu_gamma },
+        { "key_menu_incscreen",  &key_menu_incscreen },
+        { "key_menu_decscreen",  &key_menu_decscreen },
+        { "key_menu_screenshot", &key_menu_screenshot },
+        { "key_demo_quit",       &key_demo_quit },
+        { "key_spy",             &key_spy },
+    };
+
+    RUST_BIND_CONTROLS(bindings);
+#else
     M_BindIntVariable("key_menu_activate",  &key_menu_activate);
     M_BindIntVariable("key_menu_up",        &key_menu_up);
     M_BindIntVariable("key_menu_down",      &key_menu_down);
@@ -429,13 +637,38 @@ void M_BindMenuControls(void)
     M_BindIntVariable("key_menu_screenshot",&key_menu_screenshot);
     M_BindIntVariable("key_demo_quit",      &key_demo_quit);
     M_BindIntVariable("key_spy",            &key_spy);
+#endif
 }
 
 void M_BindChatControls(unsigned int num_players)
 {
+#ifndef USE_RUST_M_CONTROLS
     char name[32];  // haleyjd: 20 not large enough - Thank you, come again!
+#endif
     unsigned int i; // haleyjd: signedness conflict
 
+#ifdef USE_RUST_M_CONTROLS
+    rust_control_binding_t bindings[9];
+    char player_names[8][32];
+    unsigned int count;
+
+    bindings[0].name = "key_multi_msg";
+    bindings[0].location = &key_multi_msg;
+    count = 1;
+
+    for (i=0; i<num_players && i<arrlen(player_names); ++i)
+    {
+        M_snprintf(player_names[i], sizeof(player_names[i]),
+                   "key_multi_msgplayer%i", i + 1);
+        bindings[count].name = player_names[i];
+        bindings[count].location = &key_multi_msgplayer[i];
+        ++count;
+    }
+
+    cdoom_rust_m_controls_bind_ints((const void *) bindings,
+                                    count,
+                                    RustBindIntVariable);
+#else
     M_BindIntVariable("key_multi_msg",     &key_multi_msg);
 
     for (i=0; i<num_players; ++i)
@@ -443,6 +676,7 @@ void M_BindChatControls(unsigned int num_players)
         M_snprintf(name, sizeof(name), "key_multi_msgplayer%i", i + 1);
         M_BindIntVariable(name, &key_multi_msgplayer[i]);
     }
+#endif
 }
 
 //

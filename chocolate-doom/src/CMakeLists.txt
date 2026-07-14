@@ -57,6 +57,11 @@ target_link_libraries("${PROGRAM_PREFIX}server" ${SDL_LINK_LIBS})
 set_target_properties("${PROGRAM_PREFIX}server" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 set_target_properties("${PROGRAM_PREFIX}server" PROPERTIES LINK_FLAGS "${SDL_FLAGS}")
 
+if(ENABLE_CDOOM_RUST)
+    target_link_libraries("${PROGRAM_PREFIX}server" cdoom_rust)
+    cdoom_rust_link("${PROGRAM_PREFIX}server")
+endif()
+
 # Source files used by the game binaries (chocolate-doom, etc.)
 
 set(GAME_SOURCE_FILES
@@ -259,6 +264,11 @@ target_include_directories("${PROGRAM_PREFIX}setup"
 target_link_libraries("${PROGRAM_PREFIX}setup" ${SDL_LINK_LIBS} setup textscreen)
 set_target_properties("${PROGRAM_PREFIX}setup" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 
+if(ENABLE_CDOOM_RUST)
+    target_link_libraries("${PROGRAM_PREFIX}setup" cdoom_rust)
+    cdoom_rust_link("${PROGRAM_PREFIX}setup")
+endif()
+
 if(WIN32)
     target_link_libraries("${PROGRAM_PREFIX}setup" winmm)
 endif()
@@ -286,6 +296,11 @@ else()
     target_link_libraries(midiread SDL2::SDL2)
 endif()
 
+if(ENABLE_CDOOM_RUST)
+    target_link_libraries(midiread cdoom_rust)
+    cdoom_rust_link(midiread)
+endif()
+
 add_executable(mus2mid mus2mid.c memio.c z_native.c i_system.c m_argv.c m_misc.c d_iwad.c deh_str.c m_config.c)
 target_compile_definitions(mus2mid PRIVATE "-DSTANDALONE")
 target_include_directories(mus2mid PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/../")
@@ -294,4 +309,9 @@ if (DEFINED EMSCRIPTEN)
     set_target_properties(mus2mid PROPERTIES LINK_FLAGS "-s USE_SDL=2")
 else()
     target_link_libraries(mus2mid SDL2::SDL2)
+endif()
+
+if(ENABLE_CDOOM_RUST)
+    target_link_libraries(mus2mid cdoom_rust)
+    cdoom_rust_link(mus2mid)
 endif()

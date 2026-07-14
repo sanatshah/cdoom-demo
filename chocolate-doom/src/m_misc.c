@@ -39,6 +39,10 @@
 #include "m_misc.h"
 #include "z_zone.h"
 
+#ifdef USE_RUST_M_MISC
+#include "cdoom_rust.h"
+#endif
+
 #ifdef _WIN32
 static wchar_t *ConvertMultiByteToWide(const char *str, UINT code_page)
 {
@@ -303,6 +307,9 @@ char *M_getenv(const char *name)
 
 void M_MakeDirectory(const char *path)
 {
+#ifdef USE_RUST_M_MISC
+    cdoom_rust_m_misc_make_directory(path);
+#else
 #ifdef _WIN32
     wchar_t *wdir;
 
@@ -319,12 +326,16 @@ void M_MakeDirectory(const char *path)
 #else
     mkdir(path, 0755);
 #endif
+#endif
 }
 
 // Check if a file exists
 
 boolean M_FileExists(const char *filename)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_file_exists(filename) != 0;
+#else
     FILE *fstream;
 
     fstream = M_fopen(filename, "r");
@@ -341,6 +352,7 @@ boolean M_FileExists(const char *filename)
 
         return errno == EISDIR;
     }
+#endif
 }
 
 // Check if a file exists by probing for common case variation of its filename.
@@ -348,6 +360,9 @@ boolean M_FileExists(const char *filename)
 
 char *M_FileCaseExists(const char *path)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_file_case_exists(path);
+#else
     char *path_dup, *filename, *ext;
 
     path_dup = M_StringDuplicate(path);
@@ -410,6 +425,7 @@ char *M_FileCaseExists(const char *path)
     // 5. no luck
     free(path_dup);
     return NULL;
+#endif
 }
 
 //
@@ -440,6 +456,9 @@ long M_FileLength(FILE *handle)
 
 boolean M_WriteFile(const char *name, const void *source, int length)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_write_file(name, source, length) != 0;
+#else
     FILE *handle;
     int	count;
 	
@@ -455,6 +474,7 @@ boolean M_WriteFile(const char *name, const void *source, int length)
 	return false;
 		
     return true;
+#endif
 }
 
 
@@ -496,6 +516,9 @@ int M_ReadFile(const char *name, byte **buffer)
 
 char *M_TempFile(const char *s)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_temp_file(s);
+#else
     const char *tempdir;
 
 #ifdef _WIN32
@@ -520,14 +543,19 @@ char *M_TempFile(const char *s)
 #endif
 
     return M_StringJoin(tempdir, DIR_SEPARATOR_S, s, NULL);
+#endif
 }
 
 boolean M_StrToInt(const char *str, int *result)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_str_to_int(str, result) != 0;
+#else
     return sscanf(str, " 0x%x", (unsigned int *) result) == 1
         || sscanf(str, " 0X%x", (unsigned int *) result) == 1
         || sscanf(str, " 0%o", (unsigned int *) result) == 1
         || sscanf(str, " %d", result) == 1;
+#endif
 }
 
 // Returns the directory portion of the given path, without the trailing
@@ -536,6 +564,9 @@ boolean M_StrToInt(const char *str, int *result)
 // and must be freed by the caller after use.
 char *M_DirName(const char *path)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_dir_name(path);
+#else
     char *result;
     const char *pf, *pb;
 
@@ -556,6 +587,7 @@ char *M_DirName(const char *path)
         result[p - path] = '\0';
         return result;
     }
+#endif
 }
 
 // Returns the base filename described by the given path (without the
@@ -563,6 +595,9 @@ char *M_DirName(const char *path)
 // allocated.
 const char *M_BaseName(const char *path)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_base_name(path);
+#else
     const char *pf, *pb;
 
     pf = strrchr(path, '/');
@@ -580,10 +615,14 @@ const char *M_BaseName(const char *path)
         const char *p = (pb > pf) ? pb : pf;
         return p + 1;
     }
+#endif
 }
 
 void M_ExtractFileBase(const char *path, char *dest)
 {
+#ifdef USE_RUST_M_MISC
+    cdoom_rust_m_misc_extract_file_base(path, dest);
+#else
     const char *src;
     const char *filename;
     int length;
@@ -617,6 +656,7 @@ void M_ExtractFileBase(const char *path, char *dest)
 
 	dest[length++] = toupper((int)*src++);
     }
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -629,12 +669,16 @@ void M_ExtractFileBase(const char *path, char *dest)
 
 void M_ForceUppercase(char *text)
 {
+#ifdef USE_RUST_M_MISC
+    cdoom_rust_m_misc_force_uppercase(text);
+#else
     char *p;
 
     for (p = text; *p != '\0'; ++p)
     {
         *p = toupper(*p);
     }
+#endif
 }
 
 //---------------------------------------------------------------------------
@@ -647,12 +691,16 @@ void M_ForceUppercase(char *text)
 
 void M_ForceLowercase(char *text)
 {
+#ifdef USE_RUST_M_MISC
+    cdoom_rust_m_misc_force_lowercase(text);
+#else
     char *p;
 
     for (p = text; *p != '\0'; ++p)
     {
         *p = tolower(*p);
     }
+#endif
 }
 
 //
@@ -663,6 +711,9 @@ void M_ForceLowercase(char *text)
 
 const char *M_StrCaseStr(const char *haystack, const char *needle)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_str_case_str(haystack, needle);
+#else
     unsigned int haystack_len;
     unsigned int needle_len;
     unsigned int len;
@@ -687,6 +738,7 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
     }
 
     return NULL;
+#endif
 }
 
 //
@@ -696,6 +748,18 @@ const char *M_StrCaseStr(const char *haystack, const char *needle)
 
 char *M_StringDuplicate(const char *orig)
 {
+#ifdef USE_RUST_M_MISC
+    char *result;
+
+    result = cdoom_rust_m_misc_string_duplicate(orig);
+    if (result == NULL)
+    {
+        I_Error("Failed to duplicate string (length %zu)\n",
+                strlen(orig));
+    }
+
+    return result;
+#else
     char *result;
 
     result = strdup(orig);
@@ -707,6 +771,7 @@ char *M_StringDuplicate(const char *orig)
     }
 
     return result;
+#endif
 }
 
 //
@@ -716,6 +781,17 @@ char *M_StringDuplicate(const char *orig)
 char *M_StringReplace(const char *haystack, const char *needle,
                       const char *replacement)
 {
+#ifdef USE_RUST_M_MISC
+    char *result;
+
+    result = cdoom_rust_m_misc_string_replace(haystack, needle, replacement);
+    if (result == NULL)
+    {
+        I_Error("M_StringReplace: Failed to allocate new string");
+    }
+
+    return result;
+#else
     char *result, *dst;
     const char *p;
     size_t needle_len = strlen(needle);
@@ -770,6 +846,7 @@ char *M_StringReplace(const char *haystack, const char *needle,
     *dst = '\0';
 
     return result;
+#endif
 }
 
 // Safe string copy function that works like OpenBSD's strlcpy().
@@ -777,6 +854,9 @@ char *M_StringReplace(const char *haystack, const char *needle,
 
 boolean M_StringCopy(char *dest, const char *src, size_t dest_size)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_string_copy(dest, src, dest_size) != 0;
+#else
     size_t len;
 
     if (dest_size >= 1)
@@ -791,6 +871,7 @@ boolean M_StringCopy(char *dest, const char *src, size_t dest_size)
 
     len = strlen(dest);
     return src[len] == '\0';
+#endif
 }
 
 // Safe string concat function that works like OpenBSD's strlcat().
@@ -798,6 +879,9 @@ boolean M_StringCopy(char *dest, const char *src, size_t dest_size)
 
 boolean M_StringConcat(char *dest, const char *src, size_t dest_size)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_string_concat(dest, src, dest_size) != 0;
+#else
     size_t offset;
 
     offset = strlen(dest);
@@ -807,22 +891,31 @@ boolean M_StringConcat(char *dest, const char *src, size_t dest_size)
     }
 
     return M_StringCopy(dest + offset, src, dest_size - offset);
+#endif
 }
 
 // Returns true if 's' begins with the specified prefix.
 
 boolean M_StringStartsWith(const char *s, const char *prefix)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_string_starts_with(s, prefix) != 0;
+#else
     return strlen(s) >= strlen(prefix)
         && strncmp(s, prefix, strlen(prefix)) == 0;
+#endif
 }
 
 // Returns true if 's' ends with the specified suffix.
 
 boolean M_StringEndsWith(const char *s, const char *suffix)
 {
+#ifdef USE_RUST_M_MISC
+    return cdoom_rust_m_misc_string_ends_with(s, suffix) != 0;
+#else
     return strlen(s) >= strlen(suffix)
         && strcmp(s + strlen(s) - strlen(suffix), suffix) == 0;
+#endif
 }
 
 // Return a newly-malloced string with all the strings given as arguments
@@ -934,6 +1027,9 @@ int M_snprintf(char *buf, size_t buf_len, const char *s, ...)
 //
 void M_NormalizeSlashes(char *str)
 {
+#ifdef USE_RUST_M_MISC
+    cdoom_rust_m_misc_normalize_slashes(str);
+#else
     char *p;
 
     // Convert all slashes/backslashes to DIR_SEPARATOR
@@ -962,4 +1058,5 @@ void M_NormalizeSlashes(char *str)
             }
         }
     }
+#endif
 }

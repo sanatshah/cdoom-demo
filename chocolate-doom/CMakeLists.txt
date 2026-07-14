@@ -101,6 +101,16 @@ configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 configure_file(src/strife-res.rc.in src/strife-res.rc)
 
 option(ENABLE_CDOOM_RUST "Build and link cdoom Rust migration library" ON)
+option(USE_RUST_M_MISC "Route selected m_misc helpers through cdoom Rust" ON)
+option(USE_RUST_M_CONFIG "Route selected m_config helpers through cdoom Rust" ON)
+option(USE_RUST_M_CONTROLS "Route m_controls binding loops through cdoom Rust" ON)
+
+if(NOT ENABLE_CDOOM_RUST)
+    set(USE_RUST_M_MISC OFF CACHE BOOL "Route selected m_misc helpers through cdoom Rust" FORCE)
+    set(USE_RUST_M_CONFIG OFF CACHE BOOL "Route selected m_config helpers through cdoom Rust" FORCE)
+    set(USE_RUST_M_CONTROLS OFF CACHE BOOL "Route m_controls binding loops through cdoom Rust" FORCE)
+endif()
+
 if(ENABLE_CDOOM_RUST)
     include("${CMAKE_CURRENT_SOURCE_DIR}/../cdoom-rust/cmake/cdoom_rust.cmake")
 endif()
