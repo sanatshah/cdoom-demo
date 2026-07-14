@@ -22,7 +22,55 @@
 
 #include "memio.h"
 
+#ifdef USE_RUST_MEMIO
+#include "cdoom_rust.h"
+#else
 #include "z_zone.h"
+#endif
+
+#ifdef USE_RUST_MEMIO
+
+MEMFILE *mem_fopen_read(void *buf, size_t buflen)
+{
+	return (MEMFILE *) cdoom_rust_mem_fopen_read(buf, buflen);
+}
+
+size_t mem_fread(void *buf, size_t size, size_t nmemb, MEMFILE *stream)
+{
+	return cdoom_rust_mem_fread(buf, size, nmemb, stream);
+}
+
+MEMFILE *mem_fopen_write(void)
+{
+	return (MEMFILE *) cdoom_rust_mem_fopen_write();
+}
+
+size_t mem_fwrite(const void *ptr, size_t size, size_t nmemb, MEMFILE *stream)
+{
+	return cdoom_rust_mem_fwrite(ptr, size, nmemb, stream);
+}
+
+void mem_get_buf(MEMFILE *stream, void **buf, size_t *buflen)
+{
+	cdoom_rust_mem_get_buf(stream, buf, buflen);
+}
+
+void mem_fclose(MEMFILE *stream)
+{
+	cdoom_rust_mem_fclose(stream);
+}
+
+long mem_ftell(MEMFILE *stream)
+{
+	return cdoom_rust_mem_ftell(stream);
+}
+
+int mem_fseek(MEMFILE *stream, signed long position, mem_rel_t whence)
+{
+	return cdoom_rust_mem_fseek(stream, position, whence);
+}
+
+#else
 
 typedef enum {
 	MODE_READ,
@@ -195,3 +243,4 @@ int mem_fseek(MEMFILE *stream, signed long position, mem_rel_t whence)
 }
 
 
+#endif
