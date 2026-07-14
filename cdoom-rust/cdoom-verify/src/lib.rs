@@ -6,9 +6,6 @@
 use std::ffi::CStr;
 use std::path::Path;
 
-use cdoom_core::m_argv;
-use cdoom_core::m_cheat::{self, CheatSeq};
-
 /// Expected Chocolate Doom package version vendored in this repo.
 pub const CHOCOLATE_DOOM_VERSION: &str = "3.1.1";
 
@@ -31,6 +28,8 @@ pub fn rust_version_from_ffi() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use cdoom_core::m_argv;
+    use cdoom_core::m_cheat::{self, CheatSeq};
 
     #[test]
     fn ffi_version_matches_crate() {
