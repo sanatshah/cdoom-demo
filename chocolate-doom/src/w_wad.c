@@ -20,6 +20,7 @@
 
 
 #include <ctype.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,6 +35,10 @@
 #include "z_zone.h"
 
 #include "w_wad.h"
+
+#ifdef USE_RUST_W_WAD
+#include "cdoom_rust.h"
+#endif
 
 typedef PACKED_STRUCT (
 {
@@ -69,6 +74,154 @@ static wad_file_t *reloadhandle = NULL;
 static lumpinfo_t *reloadlumps = NULL;
 static char *reloadname = NULL;
 static int reloadlump = -1;
+
+#ifdef USE_RUST_W_WAD
+
+#define W_WAD_DIRECTORY_CHECKSUM_OFFSET 14695981039346656037ULL
+#define W_WAD_DIRECTORY_CHECKSUM_PRIME 1099511628211ULL
+
+static void W_DirectoryChecksumByte(uint64_t *checksum, unsigned int value)
+{
+    *checksum ^= value & 0xff;
+    *checksum *= W_WAD_DIRECTORY_CHECKSUM_PRIME;
+}
+
+static void W_DirectoryChecksumUInt32(uint64_t *checksum, uint32_t value)
+{
+    W_DirectoryChecksumByte(checksum, value >> 24);
+    W_DirectoryChecksumByte(checksum, value >> 16);
+    W_DirectoryChecksumByte(checksum, value >> 8);
+    W_DirectoryChecksumByte(checksum, value);
+}
+
+static uint64_t W_DirectoryChecksumRange(int startlump, int lump_count)
+{
+    uint64_t checksum;
+    int i;
+    int n;
+
+    checksum = W_WAD_DIRECTORY_CHECKSUM_OFFSET;
+    W_DirectoryChecksumUInt32(&checksum, (uint32_t) lump_count);
+
+    for (i = 0; i < lump_count; ++i)
+    {
+        lumpinfo_t *lump = lumpinfo[startlump + i];
+
+        for (n = 0; n < 8; ++n)
+        {
+            W_DirectoryChecksumByte(&checksum, lump->name[n]);
+        }
+
+        W_DirectoryChecksumUInt32(&checksum, (uint32_t) lump->position);
+        W_DirectoryChecksumUInt32(&checksum, (uint32_t) lump->size);
+    }
+
+    return checksum;
+}
+
+static uint32_t W_DirectoryTotalSizeRange(int startlump, int lump_count)
+{
+    uint32_t total_size;
+    int i;
+
+    total_size = 0;
+
+    for (i = 0; i < lump_count; ++i)
+    {
+        total_size += (uint32_t) lumpinfo[startlump + i]->size;
+    }
+
+    return total_size;
+}
+
+static void W_CopyLumpNameForCompare(char *dest, const char *src)
+{
+    int i;
+
+    memset(dest, 0, 9);
+
+    for (i = 0; i < 8 && src[i] != '\0'; ++i)
+    {
+        dest[i] = src[i];
+    }
+}
+
+static void W_DualRunRustWad(const char *filename, int startlump, int lump_count)
+{
+    uint32_t rust_lump_count;
+    uint32_t rust_total_size;
+    uint64_t rust_checksum;
+    uint32_t c_lump_count;
+    uint32_t c_total_size;
+    uint64_t c_checksum;
+    char rust_first_name[9];
+    char rust_last_name[9];
+    char c_first_name[9];
+    char c_last_name[9];
+    int status;
+
+    memset(rust_first_name, 0, sizeof(rust_first_name));
+    memset(rust_last_name, 0, sizeof(rust_last_name));
+
+    rust_lump_count = 0;
+    rust_total_size = 0;
+    rust_checksum = 0;
+
+    status = cdoom_rust_w_wad_file_summary(filename,
+                                           &rust_lump_count,
+                                           &rust_total_size,
+                                           &rust_checksum,
+                                           rust_first_name,
+                                           sizeof(rust_first_name),
+                                           rust_last_name,
+                                           sizeof(rust_last_name));
+
+    if (status != 0)
+    {
+        I_Error("Rust WAD parser failed for %s (status %d)",
+                filename, status);
+    }
+
+    c_lump_count = (uint32_t) lump_count;
+    c_total_size = W_DirectoryTotalSizeRange(startlump, lump_count);
+    c_checksum = W_DirectoryChecksumRange(startlump, lump_count);
+
+    if (lump_count > 0)
+    {
+        W_CopyLumpNameForCompare(c_first_name, lumpinfo[startlump]->name);
+        W_CopyLumpNameForCompare(c_last_name,
+                                 lumpinfo[startlump + lump_count - 1]->name);
+    }
+    else
+    {
+        memset(c_first_name, 0, sizeof(c_first_name));
+        memset(c_last_name, 0, sizeof(c_last_name));
+    }
+
+    if (rust_lump_count != c_lump_count
+     || rust_total_size != c_total_size
+     || rust_checksum != c_checksum
+     || strcmp(rust_first_name, c_first_name) != 0
+     || strcmp(rust_last_name, c_last_name) != 0)
+    {
+        I_Error("Rust WAD parity mismatch for %s: "
+                "C count=%u total=%u checksum=%016llx first=%s last=%s; "
+                "Rust count=%u total=%u checksum=%016llx first=%s last=%s",
+                filename,
+                c_lump_count,
+                c_total_size,
+                (unsigned long long) c_checksum,
+                c_first_name,
+                c_last_name,
+                rust_lump_count,
+                rust_total_size,
+                (unsigned long long) rust_checksum,
+                rust_first_name,
+                rust_last_name);
+    }
+}
+
+#endif
 
 // Hash function used for lump names.
 unsigned int W_LumpNameHash(const char *s)
@@ -221,6 +374,10 @@ wad_file_t *W_AddFile (const char *filename)
 
         ++filerover;
     }
+
+#ifdef USE_RUST_W_WAD
+    W_DualRunRustWad(filename, startlump, numfilelumps);
+#endif
 
     Z_Free(fileinfo);
 
