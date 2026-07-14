@@ -23,6 +23,10 @@
 #include "doomtype.h"
 #include "m_cheat.h"
 
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_CHEAT)
+#include "cdoom_rust.h"
+#endif
+
 //
 // CHEAT SEQUENCE PACKAGE
 //
@@ -36,6 +40,9 @@ cht_CheckCheat
 ( cheatseq_t*	cht,
   char		key )
 {
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_CHEAT)
+    return cdoom_rust_cht_check_cheat(cht, key);
+#else
     // if we make a short sequence on a cheat with parameters, this 
     // will not work in vanilla doom.  behave the same.
 
@@ -76,6 +83,7 @@ cht_CheckCheat
     // cheat not matched yet
 
     return false;
+#endif
 }
 
 void
@@ -83,7 +91,11 @@ cht_GetParam
 ( cheatseq_t*	cht,
   char*		buffer )
 {
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_CHEAT)
+    cdoom_rust_cht_get_param(cht, buffer);
+#else
     memcpy(buffer, cht->parameter_buf, cht->parameter_chars);
+#endif
 }
 
 

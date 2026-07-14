@@ -29,6 +29,10 @@
 #include "m_misc.h"
 #include "m_argv.h"  // haleyjd 20110212: warning fix
 
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_ARGV)
+#include "cdoom_rust.h"
+#endif
+
 int		myargc;
 char**		myargv;
 
@@ -45,6 +49,11 @@ char**		myargv;
 
 int M_CheckParmWithArgs(const char *check, int num_args)
 {
+#if defined(ENABLE_CDOOM_RUST) && defined(USE_RUST_M_ARGV)
+    return cdoom_rust_m_check_parm_with_args(check, myargc,
+                                             (const char * const *) myargv,
+                                             num_args);
+#else
     int i;
 
     // Check if myargv[i] has been set to NULL in LoadResponseFile(),
@@ -57,6 +66,7 @@ int M_CheckParmWithArgs(const char *check, int num_args)
     }
 
     return 0;
+#endif
 }
 
 //
