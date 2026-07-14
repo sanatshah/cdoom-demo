@@ -31,6 +31,9 @@
 #include "deh_io.h"
 #include "deh_main.h"
 
+#ifdef USE_RUST_DEH_MAIN
+#include "cdoom_rust.h"
+#endif
 
 static boolean deh_initialized = false;
 
@@ -102,6 +105,8 @@ static void DEH_Init(void)
     deh_initialized = true;
 }
 
+#ifndef USE_RUST_DEH_MAIN
+
 // Given a section name, get the section structure which corresponds
 
 static deh_section_t *GetSectionByName(char *name)
@@ -164,6 +169,8 @@ static char *CleanString(char *s)
     return s;
 }
 
+#endif
+
 // This pattern is used a lot of times in different sections, 
 // an assignment is essentially just a statement of the form:
 //
@@ -176,6 +183,9 @@ static char *CleanString(char *s)
 
 boolean DEH_ParseAssignment(char *line, char **variable_name, char **value)
 {
+#ifdef USE_RUST_DEH_MAIN
+    return cdoom_rust_deh_parse_assignment(line, variable_name, value);
+#else
     char *p;
 
     // find the equals
@@ -198,7 +208,10 @@ boolean DEH_ParseAssignment(char *line, char **variable_name, char **value)
     *value = CleanString(p+1);
     
     return true;
+#endif
 }
+
+#ifndef USE_RUST_DEH_MAIN
 
 static boolean CheckSignatures(deh_context_t *context)
 {
@@ -276,10 +289,39 @@ static void DEH_ParseComment(char *comment)
     }
 }
 
+#endif
+
 // Parses a dehacked file by reading from the context
+
+#ifdef USE_RUST_DEH_MAIN
+
+static void RustInvalidPatchError(void *context)
+{
+    DEH_Error(context, "This is not a valid dehacked patch file!");
+}
+
+static char *RustReadLine(void *context, int extended)
+{
+    return DEH_ReadLine(context, extended);
+}
+
+static int RustHadError(void *context)
+{
+    return DEH_HadError(context);
+}
+
+#endif
 
 static void DEH_ParseContext(deh_context_t *context)
 {
+#ifdef USE_RUST_DEH_MAIN
+    cdoom_rust_deh_parse_context(context, deh_section_types, deh_signatures,
+                                 &deh_allow_long_strings,
+                                 &deh_allow_long_cheats,
+                                 &deh_allow_extended_strings,
+                                 RustReadLine, RustHadError,
+                                 RustInvalidPatchError);
+#else
     deh_section_t *current_section = NULL;
     char section_name[20];
     void *tag = NULL;
@@ -364,6 +406,7 @@ static void DEH_ParseContext(deh_context_t *context)
             }
         }
     }
+#endif
 }
 
 // Parses a dehacked file
