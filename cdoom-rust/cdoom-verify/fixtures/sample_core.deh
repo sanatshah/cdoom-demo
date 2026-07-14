@@ -1,0 +1,8 @@
+Patch File for DeHackEd v3.0
+# *allow-long-strings*
+Ammo 0
+Per ammo = 11
+Max ammo = 211
+
+Text 4 4
+STCFTEST
