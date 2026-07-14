@@ -229,6 +229,20 @@ if(ENABLE_CDOOM_RUST)
     cdoom_rust_link("${PROGRAM_PREFIX}heretic")
     cdoom_rust_link("${PROGRAM_PREFIX}hexen")
     cdoom_rust_link("${PROGRAM_PREFIX}strife")
+
+    if(USE_RUST_M_ARGV)
+        target_compile_definitions("${PROGRAM_PREFIX}doom" PRIVATE USE_RUST_M_ARGV=1)
+        target_compile_definitions("${PROGRAM_PREFIX}heretic" PRIVATE USE_RUST_M_ARGV=1)
+        target_compile_definitions("${PROGRAM_PREFIX}hexen" PRIVATE USE_RUST_M_ARGV=1)
+        target_compile_definitions("${PROGRAM_PREFIX}strife" PRIVATE USE_RUST_M_ARGV=1)
+    endif()
+
+    if(USE_RUST_M_CHEAT)
+        target_compile_definitions("${PROGRAM_PREFIX}doom" PRIVATE USE_RUST_M_CHEAT=1)
+        target_compile_definitions("${PROGRAM_PREFIX}heretic" PRIVATE USE_RUST_M_CHEAT=1)
+        target_compile_definitions("${PROGRAM_PREFIX}hexen" PRIVATE USE_RUST_M_CHEAT=1)
+        target_compile_definitions("${PROGRAM_PREFIX}strife" PRIVATE USE_RUST_M_CHEAT=1)
+    endif()
 endif()
 
 # Source files needed for chocolate-setup:
