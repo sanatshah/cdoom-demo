@@ -39,6 +39,9 @@
 #include "z_zone.h"
 
 #include "config.h"
+#ifdef USE_RUST_V_VIDEO
+#include "cdoom_rust.h"
+#endif
 #ifdef HAVE_LIBPNG
 #include <png.h>
 #endif
@@ -57,13 +60,198 @@ byte *xlatab = NULL;
 
 // The screen buffer that the v_video.c code draws to.
 
+#ifndef USE_RUST_V_VIDEO
 static pixel_t *dest_screen = NULL;
+#endif
 
 int dirtybox[4]; 
 
 // haleyjd 08/28/10: clipping callback function for patches.
 // This is needed for Chocolate Strife, which clips patches to the screen.
 static vpatchclipfunc_t patchclip_callback = NULL;
+
+#ifdef USE_RUST_V_VIDEO
+static boolean V_RustPatchCheck(const char *error,
+                                int x, int y,
+                                patch_t *patch,
+                                boolean use_clip_callback,
+                                boolean use_range_check)
+{
+    x -= SHORT(patch->leftoffset);
+    y -= SHORT(patch->topoffset);
+
+    if (use_clip_callback && patchclip_callback)
+    {
+        if (!patchclip_callback(patch, x, y))
+        {
+            return false;
+        }
+    }
+
+    if (use_range_check
+     && (x < 0
+      || x + SHORT(patch->width) > SCREENWIDTH
+      || y < 0
+      || y + SHORT(patch->height) > SCREENHEIGHT))
+    {
+        I_Error("%s", error);
+    }
+
+    return true;
+}
+
+void V_MarkRect(int x, int y, int width, int height)
+{
+    cdoom_rust_v_mark_rect(x, y, width, height);
+}
+
+void V_CopyRect(int srcx, int srcy, pixel_t *source,
+                int width, int height,
+                int destx, int desty)
+{
+#ifdef RANGECHECK
+    if (srcx < 0
+     || srcx + width > SCREENWIDTH
+     || srcy < 0
+     || srcy + height > SCREENHEIGHT
+     || destx < 0
+     || destx + width > SCREENWIDTH
+     || desty < 0
+     || desty + height > SCREENHEIGHT)
+    {
+        I_Error ("Bad V_CopyRect");
+    }
+#endif
+
+    cdoom_rust_v_copy_rect(srcx, srcy, source, width, height, destx, desty);
+}
+
+void V_SetPatchClipCallback(vpatchclipfunc_t func)
+{
+    patchclip_callback = func;
+}
+
+void V_DrawPatch(int x, int y, patch_t *patch)
+{
+    if (V_RustPatchCheck("Bad V_DrawPatch", x, y, patch, true, true))
+    {
+        cdoom_rust_v_draw_patch(x, y, patch);
+    }
+}
+
+void V_DrawPatchFlipped(int x, int y, patch_t *patch)
+{
+    if (V_RustPatchCheck("Bad V_DrawPatchFlipped", x, y, patch, true, true))
+    {
+        cdoom_rust_v_draw_patch_flipped(x, y, patch);
+    }
+}
+
+void V_DrawPatchDirect(int x, int y, patch_t *patch)
+{
+    V_DrawPatch(x, y, patch);
+}
+
+void V_DrawTLPatch(int x, int y, patch_t *patch)
+{
+    if (V_RustPatchCheck("Bad V_DrawTLPatch", x, y, patch, false, true))
+    {
+        cdoom_rust_v_draw_tl_patch(x, y, patch);
+    }
+}
+
+void V_DrawXlaPatch(int x, int y, patch_t *patch)
+{
+    if (V_RustPatchCheck("Bad V_DrawXlaPatch", x, y, patch, true, false))
+    {
+        cdoom_rust_v_draw_xla_patch(x, y, patch);
+    }
+}
+
+void V_DrawAltTLPatch(int x, int y, patch_t *patch)
+{
+    if (V_RustPatchCheck("Bad V_DrawAltTLPatch", x, y, patch, false, true))
+    {
+        cdoom_rust_v_draw_alt_tl_patch(x, y, patch);
+    }
+}
+
+void V_DrawShadowedPatch(int x, int y, patch_t *patch)
+{
+    if (V_RustPatchCheck("Bad V_DrawShadowedPatch", x, y, patch, false, true))
+    {
+        cdoom_rust_v_draw_shadowed_patch(x, y, patch);
+    }
+}
+
+void V_LoadTintTable(void)
+{
+    tinttable = W_CacheLumpName("TINTTAB", PU_STATIC);
+    cdoom_rust_v_set_tint_table(tinttable);
+}
+
+void V_LoadXlaTable(void)
+{
+    xlatab = W_CacheLumpName("XLATAB", PU_STATIC);
+    cdoom_rust_v_set_xla_table(xlatab);
+}
+
+void V_DrawBlock(int x, int y, int width, int height, pixel_t *src)
+{
+#ifdef RANGECHECK
+    if (x < 0
+     || x + width > SCREENWIDTH
+     || y < 0
+     || y + height > SCREENHEIGHT)
+    {
+        I_Error ("Bad V_DrawBlock");
+    }
+#endif
+
+    cdoom_rust_v_draw_block(x, y, width, height, src);
+}
+
+void V_DrawFilledBox(int x, int y, int w, int h, int c)
+{
+    cdoom_rust_v_draw_filled_box(x, y, w, h, c);
+}
+
+void V_DrawHorizLine(int x, int y, int w, int c)
+{
+    cdoom_rust_v_draw_horiz_line(x, y, w, c);
+}
+
+void V_DrawVertLine(int x, int y, int h, int c)
+{
+    cdoom_rust_v_draw_vert_line(x, y, h, c);
+}
+
+void V_DrawBox(int x, int y, int w, int h, int c)
+{
+    cdoom_rust_v_draw_box(x, y, w, h, c);
+}
+
+void V_DrawRawScreen(pixel_t *raw)
+{
+    cdoom_rust_v_draw_raw_screen(raw);
+}
+
+void V_Init(void)
+{
+    cdoom_rust_v_register_buffers(I_VideoBuffer, dirtybox);
+}
+
+void V_UseBuffer(pixel_t *buffer)
+{
+    cdoom_rust_v_use_buffer(buffer);
+}
+
+void V_RestoreBuffer(void)
+{
+    cdoom_rust_v_register_buffers(I_VideoBuffer, dirtybox);
+    cdoom_rust_v_restore_buffer();
+}
+#else
 
 //
 // V_MarkRect 
@@ -620,6 +808,7 @@ void V_RestoreBuffer(void)
 {
     dest_screen = I_VideoBuffer;
 }
+#endif
 
 //
 // SCREEN SHOTS
