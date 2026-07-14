@@ -4,7 +4,6 @@
 //! before flipping the CMake feature flag that routes production code through Rust.
 
 use std::ffi::CStr;
-use std::mem;
 use std::path::Path;
 use std::str;
 
@@ -34,6 +33,7 @@ mod tests {
     use cdoom_core::d_iwad;
     use cdoom_core::d_mode;
     use cdoom_core::d_ticcmd::TicCmd;
+    use std::mem;
 
     fn nul_terminated_str(bytes: &'static [u8]) -> &'static str {
         let end = bytes
