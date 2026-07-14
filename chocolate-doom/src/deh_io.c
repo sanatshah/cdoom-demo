@@ -66,6 +66,10 @@ struct deh_context_s
     boolean had_error;
 };
 
+#ifdef USE_RUST_DEH_MAIN
+static void IncreaseReadBuffer(deh_context_t *context);
+#endif
+
 static deh_context_t *DEH_NewContext(void)
 {
     deh_context_t *context;
