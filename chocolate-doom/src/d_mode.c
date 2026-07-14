@@ -20,6 +20,47 @@
 #include "doomtype.h"
 #include "d_mode.h"
 
+#ifdef USE_RUST_D_MODE
+#include "cdoom_rust.h"
+
+boolean D_ValidGameMode(GameMission_t mission, GameMode_t mode)
+{
+    return cdoom_rust_valid_game_mode(mission, mode);
+}
+
+boolean D_ValidEpisodeMap(GameMission_t mission, GameMode_t mode,
+                          int episode, int map)
+{
+    return cdoom_rust_valid_episode_map(mission, mode, episode, map);
+}
+
+int D_GetNumEpisodes(GameMission_t mission, GameMode_t mode)
+{
+    return cdoom_rust_get_num_episodes(mission, mode);
+}
+
+boolean D_ValidGameVersion(GameMission_t mission, GameVersion_t version)
+{
+    return cdoom_rust_valid_game_version(mission, version);
+}
+
+boolean D_IsEpisodeMap(GameMission_t mission)
+{
+    return cdoom_rust_is_episode_map(mission);
+}
+
+const char *D_GameMissionString(GameMission_t mission)
+{
+    return cdoom_rust_game_mission_string(mission);
+}
+
+const char *D_GameModeString(GameMode_t mode)
+{
+    return cdoom_rust_game_mode_string(mode);
+}
+
+#else
+
 // Valid game mode/mission combinations, with the number of
 // episodes/maps for each.
 
@@ -231,3 +272,4 @@ const char *D_GameModeString(GameMode_t mode)
     }
 }
 
+#endif
