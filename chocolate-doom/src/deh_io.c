@@ -28,6 +28,10 @@
 #include "deh_defs.h"
 #include "deh_io.h"
 
+#ifdef USE_RUST_DEH_MAIN
+#include "cdoom_rust.h"
+#endif
+
 typedef enum
 {
     DEH_INPUT_FILE,
@@ -172,6 +176,52 @@ int DEH_GetCharLump(deh_context_t *context)
 
 // Reads a single character from a dehacked file
 
+#ifdef USE_RUST_DEH_MAIN
+
+static int RustReadRawChar(void *context_arg)
+{
+    deh_context_t *context = context_arg;
+
+    switch (context->type)
+    {
+        case DEH_INPUT_FILE:
+            return DEH_GetCharFile(context);
+
+        case DEH_INPUT_LUMP:
+            return DEH_GetCharLump(context);
+    }
+
+    return -1;
+}
+
+static void RustUnreadRawChar(void *context_arg, int result)
+{
+    deh_context_t *context = context_arg;
+
+    switch (context->type)
+    {
+        case DEH_INPUT_FILE:
+            ungetc(result, context->stream);
+            break;
+
+        case DEH_INPUT_LUMP:
+            --context->input_buffer_pos;
+            break;
+    }
+}
+
+int DEH_GetChar(deh_context_t *context)
+{
+    return cdoom_rust_deh_get_char(context, RustReadRawChar, RustUnreadRawChar);
+}
+
+static int RustGetChar(void *context)
+{
+    return DEH_GetChar(context);
+}
+
+#else
+
 int DEH_GetChar(deh_context_t *context)
 {
     int result = 0;
@@ -225,6 +275,8 @@ int DEH_GetChar(deh_context_t *context)
     return result;
 }
 
+#endif
+
 // Increase the read buffer size
 
 static void IncreaseReadBuffer(deh_context_t *context)
@@ -244,6 +296,16 @@ static void IncreaseReadBuffer(deh_context_t *context)
 }
 
 // Read a whole line
+
+#ifdef USE_RUST_DEH_MAIN
+
+char *DEH_ReadLine(deh_context_t *context, boolean extended)
+{
+    return cdoom_rust_deh_read_line(context, extended, RustGetChar,
+                                    IncreaseReadBuffer);
+}
+
+#else
 
 char *DEH_ReadLine(deh_context_t *context, boolean extended)
 {
@@ -321,6 +383,8 @@ char *DEH_ReadLine(deh_context_t *context, boolean extended)
     
     return context->readbuffer;
 }
+
+#endif
 
 void DEH_Warning(deh_context_t *context, const char *msg, ...)
 {
