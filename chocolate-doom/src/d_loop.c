@@ -38,6 +38,10 @@
 #include "net_sdl.h"
 #include "net_loop.h"
 
+#ifdef USE_RUST_D_LOOP
+#include "cdoom_rust.h"
+#endif
+
 // The complete set of data for a particular tic.
 
 typedef struct
@@ -539,6 +543,10 @@ void D_QuitNetGame (void)
 
 static int GetLowTic(void)
 {
+#ifdef USE_RUST_D_LOOP
+    return cdoom_rust_d_loop_get_low_tic(maketic, recvtic,
+                                         net_client_connected, drone);
+#else
     int lowtic;
 
     lowtic = maketic;
@@ -552,6 +560,7 @@ static int GetLowTic(void)
     }
 
     return lowtic;
+#endif
 }
 
 static int frameon;
@@ -611,6 +620,11 @@ static void OldNetSync(void)
 
 static boolean PlayersInGame(void)
 {
+#ifdef USE_RUST_D_LOOP
+    return cdoom_rust_d_loop_players_in_game(net_client_connected, drone,
+                                             local_playeringame,
+                                             NET_MAXPLAYERS);
+#else
     boolean result = false;
     unsigned int i;
 
@@ -634,6 +648,7 @@ static boolean PlayersInGame(void)
     }
 
     return result;
+#endif
 }
 
 // When using ticdup, certain values must be cleared out when running
@@ -641,6 +656,9 @@ static boolean PlayersInGame(void)
 
 static void TicdupSquash(ticcmd_set_t *set)
 {
+#ifdef USE_RUST_D_LOOP
+    cdoom_rust_d_loop_ticdup_squash(set->cmds, NET_MAXPLAYERS);
+#else
     ticcmd_t *cmd;
     unsigned int i;
 
@@ -651,6 +669,7 @@ static void TicdupSquash(ticcmd_set_t *set)
         if (cmd->buttons & BT_SPECIAL)
             cmd->buttons = 0;
     }
+#endif
 }
 
 // When running in single player mode, clear all the ingame[] array
@@ -658,6 +677,10 @@ static void TicdupSquash(ticcmd_set_t *set)
 
 static void SinglePlayerClear(ticcmd_set_t *set)
 {
+#ifdef USE_RUST_D_LOOP
+    cdoom_rust_d_loop_single_player_clear(set->ingame, NET_MAXPLAYERS,
+                                          localplayer);
+#else
     unsigned int i;
 
     for (i = 0; i < NET_MAXPLAYERS; ++i)
@@ -667,6 +690,7 @@ static void SinglePlayerClear(ticcmd_set_t *set)
             set->ingame[i] = false;
         }
     }
+#endif
 }
 
 //
@@ -822,6 +846,22 @@ static boolean StrictDemos(void)
 // provided string describing the non-vanilla expansion.
 boolean D_NonVanillaRecord(boolean conditional, const char *feature)
 {
+#ifdef USE_RUST_D_LOOP
+    boolean result;
+
+    result = cdoom_rust_d_loop_nonvanilla_record_allowed(conditional,
+                                                         StrictDemos());
+    if (!result)
+    {
+        return false;
+    }
+
+    printf("Warning: Recording a demo file with a non-vanilla extension "
+           "(%s). Use -strictdemos to disable this extension.\n",
+           feature);
+
+    return true;
+#else
     if (!conditional || StrictDemos())
     {
         return false;
@@ -832,6 +872,7 @@ boolean D_NonVanillaRecord(boolean conditional, const char *feature)
            feature);
 
     return true;
+#endif
 }
 
 // Returns true if the given lump number corresponds to data from a .lmp
@@ -860,6 +901,38 @@ static boolean IsDemoFile(int lumpnum)
 boolean D_NonVanillaPlayback(boolean conditional, int lumpnum,
                              const char *feature)
 {
+#ifdef USE_RUST_D_LOOP
+    boolean strict_demos;
+    boolean is_demo_file;
+    int decision;
+
+    strict_demos = StrictDemos();
+    is_demo_file = false;
+
+    if (conditional && !strict_demos)
+    {
+        is_demo_file = IsDemoFile(lumpnum);
+    }
+
+    decision = cdoom_rust_d_loop_nonvanilla_playback_decision(conditional,
+                                                              strict_demos,
+                                                              is_demo_file);
+
+    if (decision == 1)
+    {
+        printf("Warning: Playing back a demo file with a non-vanilla extension "
+               "(%s). Use -strictdemos to disable this extension.\n",
+               feature);
+        return true;
+    }
+    else if (decision == 2)
+    {
+        printf("Warning: WAD contains demo with a non-vanilla extension "
+               "(%s)\n", feature);
+    }
+
+    return false;
+#else
     if (!conditional || StrictDemos())
     {
         return false;
@@ -877,5 +950,6 @@ boolean D_NonVanillaPlayback(boolean conditional, int lumpnum,
            feature);
 
     return true;
+#endif
 }
 
