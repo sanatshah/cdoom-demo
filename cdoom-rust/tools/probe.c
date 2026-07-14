@@ -29,12 +29,16 @@ static void require_string(const char *name, const char *actual, const char *exp
 
 int main(void)
 {
+    const char *version;
+    probe_event_t event;
+    probe_event_t *popped;
+
     if (cdoom_rust_init() != 0) {
         fprintf(stderr, "cdoom_rust_init failed\n");
         return 1;
     }
 
-    const char *version = cdoom_rust_version();
+    version = cdoom_rust_version();
     if (version == NULL) {
         fprintf(stderr, "cdoom_rust_version returned NULL\n");
         return 1;
@@ -48,9 +52,9 @@ int main(void)
     require_string("mission string", cdoom_rust_game_mission_string(3), "plutonia");
     require_string("mode string", cdoom_rust_game_mode_string(4), "unknown");
 
-    probe_event_t event = { 0, 42, 43, 44, 45, 46, 47 };
+    event = (probe_event_t) { 0, 42, 43, 44, 45, 46, 47 };
     cdoom_rust_post_event(&event);
-    probe_event_t *popped = (probe_event_t *) cdoom_rust_pop_event();
+    popped = (probe_event_t *) cdoom_rust_pop_event();
     if (popped == NULL) {
         fprintf(stderr, "event queue unexpectedly empty\n");
         return 1;
