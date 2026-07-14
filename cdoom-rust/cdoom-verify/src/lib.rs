@@ -3,11 +3,8 @@
 //! Each new Rust module should add parity checks here (or as integration tests)
 //! before flipping the CMake feature flag that routes production code through Rust.
 
-use std::ffi::c_void;
 use std::ffi::CStr;
 use std::path::Path;
-use std::ptr::null_mut;
-use std::sync::Mutex;
 
 /// Expected Chocolate Doom package version vendored in this repo.
 pub const CHOCOLATE_DOOM_VERSION: &str = "3.1.1";
@@ -31,6 +28,9 @@ pub fn rust_version_from_ffi() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::c_void;
+    use std::ptr::null_mut;
+    use std::sync::{Mutex, MutexGuard};
 
     const PU_STATIC: i32 = 1;
     const PU_LEVEL: i32 = 5;
@@ -65,6 +65,12 @@ mod tests {
         null_mut()
     }
 
+    fn zone_test_guard() -> MutexGuard<'static, ()> {
+        ZONE_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+    }
+
     #[test]
     fn ffi_version_matches_crate() {
         assert_eq!(rust_version_from_ffi(), env!("CARGO_PKG_VERSION"));
@@ -82,7 +88,7 @@ mod tests {
 
     #[test]
     fn z_zone_reports_size_and_initial_free_memory() {
-        let _guard = ZONE_TEST_LOCK.lock().unwrap();
+        let _guard = zone_test_guard();
         let _zone = ZoneFixture::new(8192);
 
         let zone_size = cdoom_core::cdoom_rust_z_zone_size();
@@ -96,7 +102,7 @@ mod tests {
 
     #[test]
     fn z_zone_malloc_aligns_sets_owner_and_free_coalesces() {
-        let _guard = ZONE_TEST_LOCK.lock().unwrap();
+        let _guard = zone_test_guard();
         let _zone = ZoneFixture::new(8192);
         let before = cdoom_core::cdoom_rust_z_free_memory();
         let mut owner = owner_slot();
@@ -119,7 +125,7 @@ mod tests {
 
     #[test]
     fn z_zone_free_tags_clears_inclusive_tag_range_only() {
-        let _guard = ZONE_TEST_LOCK.lock().unwrap();
+        let _guard = zone_test_guard();
         let _zone = ZoneFixture::new(16384);
         let mut static_owner = owner_slot();
         let mut level_owner = owner_slot();
@@ -163,7 +169,7 @@ mod tests {
 
     #[test]
     fn z_zone_purgable_blocks_are_reclaimed_for_large_allocations() {
-        let _guard = ZONE_TEST_LOCK.lock().unwrap();
+        let _guard = zone_test_guard();
         let _zone = ZoneFixture::new(8192);
         let mut cache_a = owner_slot();
         let mut cache_b = owner_slot();
@@ -186,7 +192,7 @@ mod tests {
             (&mut cache_c as *mut *mut c_void).cast(),
         );
 
-        let large = cdoom_core::cdoom_rust_z_malloc(4096, PU_STATIC, null_mut());
+        let large = cdoom_core::cdoom_rust_z_malloc(5000, PU_STATIC, null_mut());
 
         assert!(!large.is_null());
         assert!(cdoom_core::cdoom_rust_z_purge_count() > 0);
@@ -196,7 +202,7 @@ mod tests {
 
     #[test]
     fn z_zone_change_tag_requires_owner_for_purgable_blocks() {
-        let _guard = ZONE_TEST_LOCK.lock().unwrap();
+        let _guard = zone_test_guard();
         let _zone = ZoneFixture::new(8192);
         let ptr = cdoom_core::cdoom_rust_z_malloc(128, PU_STATIC, null_mut());
         let mut owner = owner_slot();
@@ -218,7 +224,7 @@ mod tests {
 
     #[test]
     fn z_zone_wad_loader_style_trace_matches_expected_counts() {
-        let _guard = ZONE_TEST_LOCK.lock().unwrap();
+        let _guard = zone_test_guard();
         let _zone = ZoneFixture::new(8192);
         cdoom_core::cdoom_rust_z_reset_stats();
         let mut cache_owners = [owner_slot(), owner_slot(), owner_slot()];
@@ -262,7 +268,7 @@ mod tests {
         assert!(!levspec.is_null());
 
         cdoom_core::cdoom_rust_z_free_tags(PU_LEVEL, PU_LEVSPEC);
-        let late_static = cdoom_core::cdoom_rust_z_malloc(4096, PU_STATIC, null_mut());
+        let late_static = cdoom_core::cdoom_rust_z_malloc(5200, PU_STATIC, null_mut());
 
         assert!(!late_static.is_null());
         assert!(level_owner.is_null());
