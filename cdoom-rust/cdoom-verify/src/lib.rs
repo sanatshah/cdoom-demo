@@ -4,8 +4,6 @@
 //! before flipping the CMake feature flag that routes production code through Rust.
 
 use std::ffi::CStr;
-use std::ffi::CString;
-use std::os::raw::{c_char, c_int, c_uint, c_void};
 use std::path::Path;
 
 /// Expected Chocolate Doom package version vendored in this repo.
@@ -31,6 +29,8 @@ pub fn rust_version_from_ffi() -> String {
 mod tests {
     use super::*;
     use cdoom_core::deh::{DehContext, DehInputType, DehMapping, DehMappingEntry};
+    use std::ffi::CString;
+    use std::os::raw::{c_char, c_int, c_uint, c_void};
     use std::ptr;
 
     #[test]
@@ -208,7 +208,7 @@ mod tests {
         small: u8,
         medium: u16,
         large: u32,
-        label: [c_char; 5],
+        label: [c_char; 4],
     }
 
     unsafe extern "C" fn warn_counter(context: *mut c_void, _name: *const c_char) {
@@ -356,7 +356,7 @@ mod tests {
             unsafe { CStr::from_ptr(target.label.as_ptr()) }
                 .to_str()
                 .unwrap(),
-            "abcd"
+            "abc"
         );
 
         assert_eq!(
@@ -393,7 +393,7 @@ mod tests {
         );
         assert_eq!(diagnostics, 2);
 
-        let mut values = Vec::new();
+        let mut values: Vec<c_uint> = Vec::new();
         unsafe {
             cdoom_core::cdoom_rust_deh_struct_sha1_sum(
                 &mut values as *mut _ as *mut c_void,
