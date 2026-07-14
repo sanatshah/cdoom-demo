@@ -27,6 +27,10 @@
 
 #include "v_diskicon.h"
 
+#ifdef USE_RUST_V_VIDEO
+#include "cdoom_rust.h"
+#endif
+
 #include <string.h>
 
 // Only display the disk icon if more then this much bytes have been read
@@ -51,6 +55,9 @@ static void CopyRegion(pixel_t *dest, int dest_pitch,
                        pixel_t *src, int src_pitch,
                        int w, int h)
 {
+#ifdef USE_RUST_V_VIDEO
+    cdoom_rust_v_copy_region(dest, dest_pitch, src, src_pitch, w, h);
+#else
     pixel_t *s, *d;
     int y;
 
@@ -61,6 +68,7 @@ static void CopyRegion(pixel_t *dest, int dest_pitch,
         s += src_pitch;
         d += dest_pitch;
     }
+#endif
 }
 
 static void SaveDiskData(const char *disk_lump, int xoffs, int yoffs)
