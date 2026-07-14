@@ -220,6 +220,11 @@ static int RustGetChar(void *context)
     return DEH_GetChar(context);
 }
 
+static void RustIncreaseReadBuffer(void *context)
+{
+    IncreaseReadBuffer(context);
+}
+
 #else
 
 int DEH_GetChar(deh_context_t *context)
@@ -302,7 +307,7 @@ static void IncreaseReadBuffer(deh_context_t *context)
 char *DEH_ReadLine(deh_context_t *context, boolean extended)
 {
     return cdoom_rust_deh_read_line(context, extended, RustGetChar,
-                                    IncreaseReadBuffer);
+                                    RustIncreaseReadBuffer);
 }
 
 #else
