@@ -60,7 +60,9 @@ byte *xlatab = NULL;
 
 // The screen buffer that the v_video.c code draws to.
 
+#ifndef USE_RUST_V_VIDEO
 static pixel_t *dest_screen = NULL;
+#endif
 
 int dirtybox[4]; 
 
