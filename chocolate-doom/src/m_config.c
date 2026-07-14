@@ -2106,6 +2106,7 @@ static default_t *SearchCollection(default_collection_t *collection, const char 
 //    sends an interrupt). So I added a fake scan code of 126 for it.
 //    The presence of this is important so we can bind PrintScreen as
 //    a screenshot key.
+#ifndef USE_RUST_M_CONFIG
 static const int scantokey[128] =
 {
     0  ,    27,     '1',    '2',    '3',    '4',    '5',    '6',
@@ -2125,6 +2126,7 @@ static const int scantokey[128] =
     0,      0,      0,      0,      0,      0,      0,      0,
     0,      0,      0,      0,      0,      0,      KEY_PRTSCR, 0
 };
+#endif
 
 
 static void SaveDefaultCollection(default_collection_t *collection)

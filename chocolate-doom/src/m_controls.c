@@ -435,16 +435,6 @@ void M_BindHexenControls(void)
 
 void M_BindStrifeControls(void)
 {
-    // These are shared with all games, but have different defaults:
-    key_message_refresh = '/';
-
-    // These keys are shared with Heretic/Hexen but have different defaults:
-    key_jump     = 'a';
-    key_lookup   = KEY_PGUP;
-    key_lookdown = KEY_PGDN;
-    key_invleft  = KEY_INS;
-    key_invright = KEY_DEL;
-
 #ifdef USE_RUST_M_CONTROLS
     rust_control_binding_t bindings[] = {
         { "key_jump",         &key_jump },
@@ -467,7 +457,19 @@ void M_BindStrifeControls(void)
         { "joyb_invright",    &joybinvright },
         { "joyb_useartifact", &joybuseartifact },
     };
+#endif
 
+    // These are shared with all games, but have different defaults:
+    key_message_refresh = '/';
+
+    // These keys are shared with Heretic/Hexen but have different defaults:
+    key_jump     = 'a';
+    key_lookup   = KEY_PGUP;
+    key_lookdown = KEY_PGDN;
+    key_invleft  = KEY_INS;
+    key_invright = KEY_DEL;
+
+#ifdef USE_RUST_M_CONTROLS
     RUST_BIND_CONTROLS(bindings);
 #else
     M_BindIntVariable("key_jump",           &key_jump);
