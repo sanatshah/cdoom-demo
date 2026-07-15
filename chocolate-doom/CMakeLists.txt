@@ -101,6 +101,14 @@ configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 configure_file(src/strife-res.rc.in src/strife-res.rc)
 
 option(ENABLE_CDOOM_RUST "Build and link cdoom Rust migration library" ON)
+option(USE_RUST_M_ARGV "Route m_argv helpers through cdoom Rust" OFF)
+option(USE_RUST_M_CHEAT "Route m_cheat helpers through cdoom Rust" OFF)
+
+if(NOT ENABLE_CDOOM_RUST)
+    set(USE_RUST_M_ARGV OFF)
+    set(USE_RUST_M_CHEAT OFF)
+endif()
+
 if(ENABLE_CDOOM_RUST)
     include("${CMAKE_CURRENT_SOURCE_DIR}/../cdoom-rust/cmake/cdoom_rust.cmake")
 endif()
