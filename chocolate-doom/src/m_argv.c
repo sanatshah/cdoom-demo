@@ -29,9 +29,14 @@
 #include "m_misc.h"
 #include "m_argv.h"  // haleyjd 20110212: warning fix
 
+#ifdef USE_RUST_M_ARGV
+#include "cdoom_rust.h"
+#endif
+
+#ifndef USE_RUST_M_ARGV
 int		myargc;
 char**		myargv;
-
+#endif
 
 
 
@@ -42,6 +47,8 @@ char**		myargv;
 // Returns the argument number (1 to argc-1)
 // or 0 if not present
 //
+
+#ifndef USE_RUST_M_ARGV
 
 int M_CheckParmWithArgs(const char *check, int num_args)
 {
@@ -308,6 +315,30 @@ void M_FindResponseFile(void)
     }
 }
 
+#else
+
+int M_CheckParmWithArgs(const char *check, int num_args)
+{
+    return cdoom_rust_m_check_parm_with_args(check, num_args);
+}
+
+boolean M_ParmExists(const char *check)
+{
+    return cdoom_rust_m_parm_exists(check);
+}
+
+int M_CheckParm(const char *check)
+{
+    return cdoom_rust_m_check_parm(check);
+}
+
+void M_FindResponseFile(void)
+{
+    cdoom_rust_m_find_response_file();
+}
+
+#endif
+
 #if defined(_WIN32)
 enum
 {
@@ -541,16 +572,26 @@ void M_AddLooseFiles(void)
 
 const char *M_GetExecutableName(void)
 {
+#ifdef USE_RUST_M_ARGV
+    return cdoom_rust_m_get_executable_name();
+#else
     return M_BaseName(myargv[0]);
+#endif
 }
 
+#ifndef USE_RUST_M_ARGV
 char *exedir = NULL;
+#endif
 
 void M_SetExeDir(void)
 {
+#ifdef USE_RUST_M_ARGV
+    cdoom_rust_m_set_exe_dir();
+#else
     char *dirname;
 
     dirname = M_DirName(myargv[0]);
     exedir = M_StringJoin(dirname, DIR_SEPARATOR_S, NULL);
     free(dirname);
+#endif
 }
