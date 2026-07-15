@@ -177,6 +177,7 @@ unsafe fn load_response_file(argv_index: c_int, filename: *const c_char) {
             }
 
             *newargv.add(newargc as usize) = duplicate_bytes(&file[argstart..k]);
+            newargc += 1;
             k += 1;
         }
     }
