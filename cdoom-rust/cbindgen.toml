@@ -8,8 +8,10 @@ usize_is_size_t = true
 prefix = "cdoom_rust_"
 exclude = [
     "CFile",
-    "exit",
     "fclose",
+    "fopen",
+    "fseek",
+    "ftell",
     "fread",
     "free",
     "malloc",

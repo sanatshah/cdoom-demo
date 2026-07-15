@@ -18,22 +18,19 @@ pub enum ResponseParseError {
 }
 
 unsafe extern "C" {
-    fn exit(status: c_int) -> !;
     fn fclose(stream: *mut CFile) -> c_int;
+    fn fopen(filename: *const c_char, mode: *const c_char) -> *mut CFile;
+    fn fseek(stream: *mut CFile, offset: i64, whence: c_int) -> c_int;
+    fn ftell(stream: *mut CFile) -> i64;
     fn fread(ptr: *mut c_void, size: usize, nmemb: usize, stream: *mut CFile) -> usize;
     fn free(ptr: *mut c_void);
     fn malloc(size: usize) -> *mut c_void;
     fn printf(format: *const c_char, ...) -> c_int;
     fn strcasecmp(s1: *const c_char, s2: *const c_char) -> c_int;
-
-    fn I_Error(error: *const c_char, ...) -> !;
-    fn M_BaseName(name: *const c_char) -> *const c_char;
-    fn M_DirName(path: *const c_char) -> *mut c_char;
-    fn M_FileLength(handle: *mut CFile) -> c_int;
-    fn M_StringDuplicate(orig: *const c_char) -> *mut c_char;
-    fn M_StringJoin(s: *const c_char, ...) -> *mut c_char;
-    fn M_fopen(filename: *const c_char, mode: *const c_char) -> *mut CFile;
 }
+
+const SEEK_SET: c_int = 0;
+const SEEK_END: c_int = 2;
 
 fn is_response_space(byte: u8) -> bool {
     byte.is_ascii_whitespace()
@@ -135,20 +132,26 @@ unsafe fn set_argv_at(argv: *mut *mut *mut c_char, i: c_int, value: *mut c_char)
 fn parse_or_error(bytes: &[u8], filename: *const c_char) -> Vec<Vec<u8>> {
     match parse_response_args(bytes) {
         Ok(args) => args,
-        Err(ResponseParseError::UnclosedQuotes) => unsafe {
-            I_Error(c"Quotes unclosed in response file '%s'".as_ptr(), filename)
-        },
-        Err(ResponseParseError::TooManyArguments) => unsafe {
-            I_Error(c"Too many arguments in the response file!".as_ptr())
-        },
+        Err(ResponseParseError::UnclosedQuotes) => fatal_error(&format!(
+            "Quotes unclosed in response file '{}'",
+            unsafe { std::ffi::CStr::from_ptr(filename) }.to_string_lossy()
+        )),
+        Err(ResponseParseError::TooManyArguments) => {
+            fatal_error("Too many arguments in the response file!")
+        }
     }
+}
+
+fn fatal_error(message: &str) -> ! {
+    eprintln!("{message}");
+    std::process::exit(1);
 }
 
 unsafe fn duplicate_arg(arg: &[u8]) -> *mut c_char {
     let copy = unsafe { malloc(arg.len() + 1) as *mut c_char };
 
     if copy.is_null() {
-        unsafe { I_Error(c"Failed to allocate response file argument".as_ptr()) }
+        fatal_error("Failed to allocate response file argument");
     }
 
     unsafe {
@@ -159,18 +162,42 @@ unsafe fn duplicate_arg(arg: &[u8]) -> *mut c_char {
     copy
 }
 
+unsafe fn duplicate_cstr(value: *const c_char) -> *mut c_char {
+    let bytes = unsafe { std::ffi::CStr::from_ptr(value) }.to_bytes();
+
+    unsafe { duplicate_arg(bytes) }
+}
+
+unsafe fn file_length(handle: *mut CFile) -> c_int {
+    if unsafe { fseek(handle, 0, SEEK_END) } != 0 {
+        fatal_error("Failed to seek response file");
+    }
+
+    let length = unsafe { ftell(handle) };
+
+    if length < 0 {
+        fatal_error("Failed to determine response file length");
+    }
+
+    if unsafe { fseek(handle, 0, SEEK_SET) } != 0 {
+        fatal_error("Failed to rewind response file");
+    }
+
+    length as c_int
+}
+
 unsafe fn load_response_file(
     argv_index: c_int,
     filename: *const c_char,
     argc: *mut c_int,
     argv: *mut *mut *mut c_char,
 ) {
-    let handle = unsafe { M_fopen(filename, c"rb".as_ptr()) };
+    let handle = unsafe { fopen(filename, c"rb".as_ptr()) };
 
     if handle.is_null() {
         unsafe {
             printf(c"\nNo such response file!".as_ptr());
-            exit(1);
+            std::process::exit(1);
         }
     }
 
@@ -178,11 +205,11 @@ unsafe fn load_response_file(
         printf(c"Found response file %s!\n".as_ptr(), filename);
     }
 
-    let size = unsafe { M_FileLength(handle) };
+    let size = unsafe { file_length(handle) };
     let file = unsafe { malloc(size as usize + 1) as *mut u8 };
 
     if file.is_null() {
-        unsafe { I_Error(c"Failed to allocate response file buffer".as_ptr()) }
+        fatal_error("Failed to allocate response file buffer");
     }
 
     let mut offset = 0;
@@ -197,7 +224,10 @@ unsafe fn load_response_file(
         };
 
         if count == 0 {
-            unsafe { I_Error(c"Failed to read full contents of '%s'".as_ptr(), filename) }
+            fatal_error(&format!(
+                "Failed to read full contents of '{}'",
+                unsafe { std::ffi::CStr::from_ptr(filename) }.to_string_lossy()
+            ));
         }
 
         offset += count;
@@ -216,7 +246,7 @@ unsafe fn load_response_file(
     let newargv = unsafe { malloc(mem::size_of::<*mut c_char>() * MAXARGVS) as *mut *mut c_char };
 
     if newargv.is_null() {
-        unsafe { I_Error(c"Failed to allocate response argv".as_ptr()) }
+        fatal_error("Failed to allocate response argv");
     }
 
     unsafe {
@@ -224,7 +254,7 @@ unsafe fn load_response_file(
     }
 
     if argv_index >= MAXARGVS as c_int {
-        unsafe { I_Error(c"Too many arguments up to the response file!".as_ptr()) }
+        fatal_error("Too many arguments up to the response file!");
     }
 
     let mut newargc = 0;
@@ -238,7 +268,7 @@ unsafe fn load_response_file(
 
     for arg in &response_args {
         if newargc >= MAXARGVS as c_int {
-            unsafe { I_Error(c"Too many arguments in the response file!".as_ptr()) }
+            fatal_error("Too many arguments in the response file!");
         }
 
         unsafe {
@@ -248,7 +278,7 @@ unsafe fn load_response_file(
     }
 
     if newargc + old_argc - (argv_index + 1) >= MAXARGVS as c_int {
-        unsafe { I_Error(c"Too many arguments following the response file!".as_ptr()) }
+        fatal_error("Too many arguments following the response file!");
     }
 
     for i in (argv_index + 1)..old_argc {
@@ -307,7 +337,7 @@ pub unsafe fn find_response_file(argc: *mut c_int, argv: *mut *mut *mut c_char) 
 
         unsafe {
             free(argv_at(argv, response_arg).cast::<c_void>());
-            set_argv_at(argv, response_arg, M_StringDuplicate(c"-_".as_ptr()));
+            set_argv_at(argv, response_arg, duplicate_cstr(c"-_".as_ptr()));
             load_response_file(
                 response_arg + 1,
                 argv_at(argv, response_arg + 1),
@@ -324,7 +354,17 @@ pub unsafe fn find_response_file(argc: *mut c_int, argv: *mut *mut *mut c_char) 
 ///
 /// `argv` must point to an argv array with a valid argv[0].
 pub unsafe fn get_executable_name(argv: *mut *mut c_char) -> *const c_char {
-    unsafe { M_BaseName(*argv) }
+    let path = unsafe { *argv };
+    let bytes = unsafe { std::ffi::CStr::from_ptr(path) }.to_bytes();
+    let mut basename = 0;
+
+    for (index, byte) in bytes.iter().enumerate() {
+        if *byte == b'/' || cfg!(windows) && *byte == b'\\' {
+            basename = index + 1;
+        }
+    }
+
+    unsafe { path.add(basename) }
 }
 
 /// Returns the executable directory string allocated by Chocolate Doom helpers.
@@ -333,16 +373,30 @@ pub unsafe fn get_executable_name(argv: *mut *mut c_char) -> *const c_char {
 ///
 /// `argv` must point to an argv array with a valid argv[0].
 pub unsafe fn set_exe_dir(argv: *mut *mut c_char) -> *mut c_char {
-    let dirname = unsafe { M_DirName(*argv) };
     #[cfg(windows)]
-    let separator = c"\\".as_ptr();
+    let separator = b'\\';
     #[cfg(not(windows))]
-    let separator = c"/".as_ptr();
-    let exedir = unsafe { M_StringJoin(dirname, separator, ptr::null::<c_char>()) };
+    let separator = b'/';
 
-    unsafe {
-        free(dirname.cast::<c_void>());
-    }
+    let path = unsafe { *argv };
+    let bytes = unsafe { std::ffi::CStr::from_ptr(path) }.to_bytes();
+    let dirname_len = bytes
+        .iter()
+        .enumerate()
+        .filter_map(|(index, byte)| {
+            if *byte == b'/' || cfg!(windows) && *byte == b'\\' {
+                Some(index)
+            } else {
+                None
+            }
+        })
+        .last();
 
-    exedir
+    let mut result = match dirname_len {
+        Some(len) => bytes[..len].to_vec(),
+        None => b".".to_vec(),
+    };
+    result.push(separator);
+
+    unsafe { duplicate_arg(&result) }
 }
