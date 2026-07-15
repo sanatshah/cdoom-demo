@@ -4,19 +4,7 @@
 //! before flipping the CMake feature flag that routes production code through Rust.
 
 use std::ffi::CStr;
-use std::os::raw::{c_char, c_void};
 use std::path::Path;
-use std::ptr;
-use std::sync::Mutex;
-
-use cdoom_core::m_cheat::{CheatSeq, MAX_CHEAT_LEN, MAX_CHEAT_PARAMS};
-
-static ARGV_LOCK: Mutex<()> = Mutex::new(());
-
-unsafe extern "C" {
-    fn free(ptr: *mut c_void);
-    fn malloc(size: usize) -> *mut c_void;
-}
 
 /// Expected Chocolate Doom package version vendored in this repo.
 pub const CHOCOLATE_DOOM_VERSION: &str = "3.1.1";
@@ -40,6 +28,18 @@ pub fn rust_version_from_ffi() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::os::raw::{c_char, c_void};
+    use std::ptr;
+    use std::sync::Mutex;
+
+    use cdoom_core::m_cheat::{CheatSeq, MAX_CHEAT_LEN, MAX_CHEAT_PARAMS};
+
+    static ARGV_LOCK: Mutex<()> = Mutex::new(());
+
+    unsafe extern "C" {
+        fn free(ptr: *mut c_void);
+        fn malloc(size: usize) -> *mut c_void;
+    }
 
     #[test]
     fn ffi_version_matches_crate() {

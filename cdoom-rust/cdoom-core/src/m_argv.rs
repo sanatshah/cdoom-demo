@@ -55,10 +55,6 @@ fn duplicate_bytes(bytes: &[u8]) -> *mut c_char {
     ptr
 }
 
-fn duplicate_cstr(ptr: *const c_char) -> *mut c_char {
-    duplicate_bytes(cstr_bytes(ptr))
-}
-
 fn fatal(message: &str) -> ! {
     eprintln!("{message}");
     // SAFETY: Matches the fatal process exit style used by the original
