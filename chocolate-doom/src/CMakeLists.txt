@@ -126,6 +126,15 @@ set(GAME_SOURCE_FILES
     z_zone.c            z_zone.h)
 
 set(GAME_INCLUDE_DIRS "${CMAKE_CURRENT_BINARY_DIR}/../")
+set(CDOOM_RUST_MODULE_DEFINES)
+
+if(ENABLE_CDOOM_RUST AND USE_RUST_M_ARGV)
+    list(APPEND CDOOM_RUST_MODULE_DEFINES USE_RUST_M_ARGV=1)
+endif()
+
+if(ENABLE_CDOOM_RUST AND USE_RUST_M_CHEAT)
+    list(APPEND CDOOM_RUST_MODULE_DEFINES USE_RUST_M_CHEAT=1)
+endif()
 
 if(WIN32)
     list(APPEND GAME_SOURCE_FILES
@@ -171,6 +180,7 @@ else()
 endif()
 
 target_include_directories("${PROGRAM_PREFIX}doom" PRIVATE ${GAME_INCLUDE_DIRS})
+target_compile_definitions("${PROGRAM_PREFIX}doom" PRIVATE ${CDOOM_RUST_MODULE_DEFINES})
 target_link_libraries("${PROGRAM_PREFIX}doom" doom ${EXTRA_LIBS})
 set_target_properties("${PROGRAM_PREFIX}doom" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 
@@ -186,6 +196,7 @@ else()
 endif()
 
 target_include_directories("${PROGRAM_PREFIX}heretic" PRIVATE ${GAME_INCLUDE_DIRS})
+target_compile_definitions("${PROGRAM_PREFIX}heretic" PRIVATE ${CDOOM_RUST_MODULE_DEFINES})
 target_link_libraries("${PROGRAM_PREFIX}heretic" heretic ${EXTRA_LIBS})
 set_target_properties("${PROGRAM_PREFIX}heretic" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 
@@ -201,6 +212,7 @@ else()
 endif()
 
 target_include_directories("${PROGRAM_PREFIX}hexen" PRIVATE ${GAME_INCLUDE_DIRS})
+target_compile_definitions("${PROGRAM_PREFIX}hexen" PRIVATE ${CDOOM_RUST_MODULE_DEFINES})
 target_link_libraries("${PROGRAM_PREFIX}hexen" hexen ${EXTRA_LIBS})
 set_target_properties("${PROGRAM_PREFIX}hexen" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 
@@ -216,6 +228,7 @@ else()
 endif()
 
 target_include_directories("${PROGRAM_PREFIX}strife" PRIVATE ${GAME_INCLUDE_DIRS})
+target_compile_definitions("${PROGRAM_PREFIX}strife" PRIVATE ${CDOOM_RUST_MODULE_DEFINES})
 target_link_libraries("${PROGRAM_PREFIX}strife" strife ${EXTRA_LIBS})
 set_target_properties("${PROGRAM_PREFIX}strife" PROPERTIES COMPILE_FLAGS "${SDL_FLAGS}")
 
