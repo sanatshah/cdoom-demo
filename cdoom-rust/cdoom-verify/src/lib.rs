@@ -4,8 +4,6 @@
 //! before flipping the CMake feature flag that routes production code through Rust.
 
 use std::ffi::CStr;
-use std::ffi::CString;
-use std::os::raw::c_char;
 use std::path::Path;
 
 /// Expected Chocolate Doom package version vendored in this repo.
@@ -32,6 +30,8 @@ mod tests {
     use super::*;
     use cdoom_core::m_argv;
     use cdoom_core::m_cheat::{CheatSeq, MAX_CHEAT_LEN, MAX_CHEAT_PARAMS};
+    use std::ffi::CString;
+    use std::os::raw::c_char;
 
     fn cheat(value: &str, parameters: i32) -> CheatSeq {
         let mut sequence = [0 as c_char; MAX_CHEAT_LEN];
