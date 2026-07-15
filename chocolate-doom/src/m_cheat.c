@@ -23,6 +23,30 @@
 #include "doomtype.h"
 #include "m_cheat.h"
 
+#ifdef USE_RUST_M_CHEAT
+#include "cdoom_rust.h"
+
+typedef char rust_cheatseq_layout_check[
+    sizeof(cheatseq_t) == sizeof(cdoom_rust_CheatSeq) ? 1 : -1];
+
+int
+cht_CheckCheat
+( cheatseq_t*	cht,
+  char		key )
+{
+    return cdoom_rust_cht_check_cheat((cdoom_rust_CheatSeq *) cht, key);
+}
+
+void
+cht_GetParam
+( cheatseq_t*	cht,
+  char*		buffer )
+{
+    cdoom_rust_cht_get_param((const cdoom_rust_CheatSeq *) cht, buffer);
+}
+
+#else
+
 //
 // CHEAT SEQUENCE PACKAGE
 //
@@ -87,3 +111,4 @@ cht_GetParam
 }
 
 
+#endif

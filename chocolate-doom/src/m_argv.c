@@ -29,8 +29,12 @@
 #include "m_misc.h"
 #include "m_argv.h"  // haleyjd 20110212: warning fix
 
+#ifdef USE_RUST_M_ARGV
+#include "cdoom_rust.h"
+#else
 int		myargc;
 char**		myargv;
+#endif
 
 
 
@@ -45,6 +49,9 @@ char**		myargv;
 
 int M_CheckParmWithArgs(const char *check, int num_args)
 {
+#ifdef USE_RUST_M_ARGV
+    return cdoom_rust_m_check_parm_with_args(check, num_args);
+#else
     int i;
 
     // Check if myargv[i] has been set to NULL in LoadResponseFile(),
@@ -57,6 +64,7 @@ int M_CheckParmWithArgs(const char *check, int num_args)
     }
 
     return 0;
+#endif
 }
 
 //
@@ -68,16 +76,25 @@ int M_CheckParmWithArgs(const char *check, int num_args)
 
 boolean M_ParmExists(const char *check)
 {
+#ifdef USE_RUST_M_ARGV
+    return cdoom_rust_m_parm_exists(check);
+#else
     return M_CheckParm(check) != 0;
+#endif
 }
 
 int M_CheckParm(const char *check)
 {
+#ifdef USE_RUST_M_ARGV
+    return cdoom_rust_m_check_parm(check);
+#else
     return M_CheckParmWithArgs(check, 0);
+#endif
 }
 
 #define MAXARGVS        100
 
+#ifndef USE_RUST_M_ARGV
 static void LoadResponseFile(int argv_index, const char *filename)
 {
     FILE *handle;
@@ -266,6 +283,7 @@ static void LoadResponseFile(int argv_index, const char *filename)
     }
 #endif
 }
+#endif
 
 //
 // Find a Response File
@@ -273,6 +291,9 @@ static void LoadResponseFile(int argv_index, const char *filename)
 
 void M_FindResponseFile(void)
 {
+#ifdef USE_RUST_M_ARGV
+    cdoom_rust_m_find_response_file();
+#else
     int i;
 
     for (i = 1; i < myargc; i++)
@@ -306,6 +327,7 @@ void M_FindResponseFile(void)
         myargv[i] = M_StringDuplicate("-_");
         LoadResponseFile(i + 1, myargv[i + 1]);
     }
+#endif
 }
 
 #if defined(_WIN32)
@@ -541,16 +563,28 @@ void M_AddLooseFiles(void)
 
 const char *M_GetExecutableName(void)
 {
+#ifdef USE_RUST_M_ARGV
+    return cdoom_rust_m_get_executable_name();
+#else
     return M_BaseName(myargv[0]);
+#endif
 }
 
+#ifdef USE_RUST_M_ARGV
+extern char *exedir;
+#else
 char *exedir = NULL;
+#endif
 
 void M_SetExeDir(void)
 {
+#ifdef USE_RUST_M_ARGV
+    cdoom_rust_m_set_exe_dir();
+#else
     char *dirname;
 
     dirname = M_DirName(myargv[0]);
     exedir = M_StringJoin(dirname, DIR_SEPARATOR_S, NULL);
     free(dirname);
+#endif
 }

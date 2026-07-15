@@ -36,6 +36,9 @@ option(CMAKE_FIND_PACKAGE_PREFER_CONFIG
 option(ENABLE_SDL2_NET "Enable SDL2_net" On)
 option(ENABLE_SDL2_MIXER "Enable SDL2_mixer" On)
 
+option(USE_RUST_M_ARGV "Route m_argv through cdoom Rust migration ABI" OFF)
+option(USE_RUST_M_CHEAT "Route m_cheat through cdoom Rust migration ABI" OFF)
+
 if (NOT DEFINED EMSCRIPTEN)
     find_package(SDL2 2.0.14)
 endif()
