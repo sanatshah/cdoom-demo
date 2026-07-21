@@ -231,6 +231,13 @@ if(ENABLE_CDOOM_RUST)
     cdoom_rust_link("${PROGRAM_PREFIX}strife")
 endif()
 
+if(USE_RUST_P_REJECTPAD)
+    target_compile_definitions("${PROGRAM_PREFIX}doom" PRIVATE USE_RUST_P_REJECTPAD=1)
+    target_compile_definitions("${PROGRAM_PREFIX}heretic" PRIVATE USE_RUST_P_REJECTPAD=1)
+    target_compile_definitions("${PROGRAM_PREFIX}hexen" PRIVATE USE_RUST_P_REJECTPAD=1)
+    target_compile_definitions("${PROGRAM_PREFIX}strife" PRIVATE USE_RUST_P_REJECTPAD=1)
+endif()
+
 # Source files needed for chocolate-setup:
 
 set(SETUP_FILES
