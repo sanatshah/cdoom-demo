@@ -20,6 +20,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#ifdef USE_RUST_P_REJECTPAD
+#include "cdoom_rust.h"
+#endif
+
 #include "m_argv.h"
 #include "p_rejectpad.h"
 
@@ -29,6 +33,16 @@
 
 void PadRejectArray(byte *array, unsigned int len, int totallines)
 {
+#ifdef USE_RUST_P_REJECTPAD
+    if (len > 4 * sizeof(unsigned int))
+    {
+        fprintf(stderr, "PadRejectArray: REJECT lump too short to pad! (%u > %i)\n",
+                        len, (int) (4 * sizeof(unsigned int)));
+    }
+
+    cdoom_rust_pad_reject_array(array, len, totallines,
+                                M_CheckParm("-reject_pad_with_ff") != 0);
+#else
     unsigned int i;
     unsigned int byte_num;
     byte *dest;
@@ -78,4 +92,5 @@ void PadRejectArray(byte *array, unsigned int len, int totallines)
 
         memset(array + sizeof(rejectpad), padvalue, len - sizeof(rejectpad));
     }
+#endif
 }
