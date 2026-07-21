@@ -23,12 +23,20 @@
 #include "m_argv.h"
 #include "p_rejectpad.h"
 
+#ifdef USE_RUST_P_REJECTPAD
+#include "cdoom_rust.h"
+#endif
+
 
 // Pad the REJECT lump with extra data when the lump is too small,
 // to simulate a REJECT buffer overflow in Vanilla Doom.
 
 void PadRejectArray(byte *array, unsigned int len, int totallines)
 {
+#ifdef USE_RUST_P_REJECTPAD
+    cdoom_rust_pad_reject_array(array, len, totallines,
+                                M_CheckParm("-reject_pad_with_ff") != 0);
+#else
     unsigned int i;
     unsigned int byte_num;
     byte *dest;
@@ -78,4 +86,5 @@ void PadRejectArray(byte *array, unsigned int len, int totallines)
 
         memset(array + sizeof(rejectpad), padvalue, len - sizeof(rejectpad));
     }
+#endif
 }

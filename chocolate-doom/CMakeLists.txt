@@ -101,6 +101,12 @@ configure_file(src/setup/setup-manifest.xml.in src/setup/setup-manifest.xml)
 configure_file(src/strife-res.rc.in src/strife-res.rc)
 
 option(ENABLE_CDOOM_RUST "Build and link cdoom Rust migration library" ON)
+option(USE_RUST_P_REJECTPAD "Route p_rejectpad through cdoom-rust" ${ENABLE_CDOOM_RUST})
+
+if(USE_RUST_P_REJECTPAD AND NOT ENABLE_CDOOM_RUST)
+    message(STATUS "USE_RUST_P_REJECTPAD requested without ENABLE_CDOOM_RUST; using C p_rejectpad")
+endif()
+
 if(ENABLE_CDOOM_RUST)
     include("${CMAKE_CURRENT_SOURCE_DIR}/../cdoom-rust/cmake/cdoom_rust.cmake")
 endif()

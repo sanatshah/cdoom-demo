@@ -4,9 +4,11 @@
 
 mod ffi;
 
+pub mod p_rejectpad;
+
 /// Human-readable library version (crate version plus component name).
 pub fn version_string() -> &'static str {
     concat!("cdoom-core ", env!("CARGO_PKG_VERSION"))
 }
 
-pub use ffi::{cdoom_rust_init, cdoom_rust_version};
+pub use ffi::{cdoom_rust_init, cdoom_rust_pad_reject_array, cdoom_rust_version};
