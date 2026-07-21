@@ -25,19 +25,23 @@ On this VM, dependencies are installed by the startup update script, so skip
 
 ### Rust toolchain
 `cdoom-rust/rust-toolchain.toml` pins `channel = "stable"`. Build deps (e.g.
-`cbindgen`'s `clap`) require **edition2024 → rustc ≥ 1.85**. The base image
-already ships a working `stable` toolchain under `/usr/local/rustup`, which is
-sufficient; do not pin an older toolchain.
+`cbindgen`'s `clap`) require **edition2024 → rustc ≥ 1.85**.
 
-Do NOT run a bare `rustup toolchain install stable` at startup. The base
-toolchain lives in the read-only overlay lower layer, so whenever upstream
-publishes a newer stable, rustup attempts an in-place *upgrade* and dies while
-moving the old component out of the toolchain tree:
-`error: could not rename ... Invalid cross-device link (os error 18)` (EXDEV) —
-this is what made setup exit non-zero (`INSTALL_FAILED`). The already-installed
-`stable` still builds and tests the project after the rollback. The update
-script therefore installs stable only if absent:
-`rustup toolchain list | grep -q '^stable-' || rustup toolchain install stable --profile minimal`.
+The VM's *default* rustup toolchain is an older `1.83.0` (no edition2024). The
+`rust-toolchain.toml` override only applies when the cwd is inside `cdoom-rust/`,
+so the documented root-level header build (`cargo build --manifest-path
+cdoom-rust/Cargo.toml ...`) and CMake's cargo invocation use the **default**
+toolchain and fail with `feature 'edition2024' is required`. The update script
+therefore installs `stable` if absent AND makes it the default:
+`rustup toolchain list | grep -q '^stable-' || rustup toolchain install stable --profile minimal`
+followed by `rustup default stable`.
+
+Do NOT run a bare `rustup toolchain install stable` *without* the `grep` guard.
+If a future base image ships `stable` in the read-only overlay lower layer, a
+forced install/upgrade dies while moving the old component out of the toolchain
+tree: `error: could not rename ... Invalid cross-device link (os error 18)`
+(EXDEV). The guard skips the install when stable is already present; `rustup
+default stable` is then just a settings switch (no download/rename) and is safe.
 
 ### Tests / verification
 - Rust unit tests: `cd cdoom-rust && cargo test --workspace` (3 tests in `cdoom-verify`).
