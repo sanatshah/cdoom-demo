@@ -25,6 +25,145 @@
 #include "memio.h"
 #include "mus2mid.h"
 
+#ifdef USE_RUST_MUS2MID
+#include <string.h>
+
+#include "cdoom_rust.h"
+
+#define READ_BUFFER_SIZE 1024
+
+static boolean AppendBytes(byte **data, size_t *len, size_t *capacity,
+                           const byte *chunk, size_t chunk_len)
+{
+    byte *new_data;
+    size_t new_capacity;
+
+    if (chunk_len == 0)
+    {
+        return false;
+    }
+
+    if (*len + chunk_len < *len)
+    {
+        return true;
+    }
+
+    if (*capacity == 0)
+    {
+        *capacity = READ_BUFFER_SIZE;
+    }
+
+    while (*len + chunk_len > *capacity)
+    {
+        new_capacity = *capacity * 2;
+
+        if (new_capacity < *capacity)
+        {
+            return true;
+        }
+
+        *capacity = new_capacity;
+    }
+
+    new_data = realloc(*data, *capacity);
+
+    if (new_data == NULL)
+    {
+        return true;
+    }
+
+    *data = new_data;
+    memcpy(*data + *len, chunk, chunk_len);
+    *len += chunk_len;
+
+    return false;
+}
+
+static boolean ReadRemainingMemFile(MEMFILE *stream, byte **data, size_t *len)
+{
+    byte chunk[READ_BUFFER_SIZE];
+    size_t capacity = 0;
+    size_t items_read;
+
+    *data = NULL;
+    *len = 0;
+
+    for (;;)
+    {
+        items_read = mem_fread(chunk, 1, sizeof(chunk), stream);
+
+        if (items_read == (size_t) -1)
+        {
+            free(*data);
+            *data = NULL;
+            *len = 0;
+            return true;
+        }
+
+        if (items_read == 0)
+        {
+            break;
+        }
+
+        if (AppendBytes(data, len, &capacity, chunk, items_read))
+        {
+            free(*data);
+            *data = NULL;
+            *len = 0;
+            return true;
+        }
+
+        if (items_read < sizeof(chunk))
+        {
+            break;
+        }
+    }
+
+    if (*data == NULL)
+    {
+        *data = malloc(1);
+
+        if (*data == NULL)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+boolean mus2mid(MEMFILE *musinput, MEMFILE *midioutput)
+{
+    byte *input;
+    uint8_t *output;
+    size_t input_len;
+    size_t output_len;
+    boolean result;
+
+    if (ReadRemainingMemFile(musinput, &input, &input_len))
+    {
+        return true;
+    }
+
+    output = NULL;
+    output_len = 0;
+    result = cdoom_rust_mus2mid(input, input_len, &output, &output_len) != 0;
+    free(input);
+
+    if (result)
+    {
+        cdoom_rust_free_buffer(output, output_len);
+        return true;
+    }
+
+    result = mem_fwrite(output, 1, output_len, midioutput) != output_len;
+    cdoom_rust_free_buffer(output, output_len);
+
+    return result;
+}
+
+#else
+
 #define NUM_CHANNELS 16
 
 #define MIDI_PERCUSSION_CHAN 9
@@ -690,6 +829,8 @@ boolean mus2mid(MEMFILE *musinput, MEMFILE *midioutput)
 
     return false;
 }
+
+#endif
 
 #ifdef STANDALONE
 
