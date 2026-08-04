@@ -39,6 +39,15 @@ this is what made setup exit non-zero (`INSTALL_FAILED`). The already-installed
 script therefore installs stable only if absent:
 `rustup toolchain list | grep -q '^stable-' || rustup toolchain install stable --profile minimal`.
 
+`stable` MUST also be the rustup **default**. On a fresh VM the default was
+`1.83.0` (too old — `edition2024` build deps need rustc ≥ 1.85). Commands run
+from a directory *outside* `cdoom-rust/` (which is where the `rust-toolchain.toml`
+pin lives) fall back to that default — notably `scripts/verify-baseline.sh`,
+whose FFI-probe step runs `cargo build --manifest-path cdoom-rust/Cargo.toml ...`
+from the repo root and fails with `feature 'edition2024' is required` unless the
+default is stable. The update script runs `rustup default stable` to fix this
+(safe: it only switches the default, it does not upgrade/reinstall).
+
 ### Tests / verification
 - Rust unit tests: `cd cdoom-rust && cargo test --workspace` (3 tests in `cdoom-verify`).
 - Migration oracle: `./scripts/verify-baseline.sh` (Rust tests + FFI probe +
@@ -47,9 +56,14 @@ script therefore installs stable only if absent:
 - Rust version exposed to C: `./chocolate-doom/build/src/chocolate-doom -cdoom-rust-info`.
 
 ### Running the game
-`./run.sh` launches the game with `wads/freedoom1.wad` (WADs already present, so
-its download path is skipped). GUI requires a display — a VNC desktop is available
-on `DISPLAY=:1`. Config/saves land in `~/.local/share/chocolate-doom/`.
+`DISPLAY=:1 ./run.sh` launches the game with `wads/freedoom1.wad` (WADs already
+present, so its download path is skipped). GUI requires a display — a VNC desktop
+is available on `DISPLAY=:1`. Config/saves land in `~/.local/share/chocolate-doom/`.
+The VM has no sound card, so startup prints many `ALSA lib ...` / `Error
+initialising SDL_mixer: ALSA: Couldn't open audio device` lines — these are
+harmless (the game runs fine without audio); pass `-nosound -nomusic` to silence
+them. On the title screen the engine auto-plays an attract-mode demo; press Esc to
+reach the menu and start a real game.
 
 ### Known caveat — headless timedemo does not self-exit
 `chocolate-doom ... -timedemo demo1 -nodraw -nosound -nomusic` runs the full
