@@ -25,18 +25,25 @@ On this VM, dependencies are installed by the startup update script, so skip
 
 ### Rust toolchain
 `cdoom-rust/rust-toolchain.toml` pins `channel = "stable"`. Build deps (e.g.
-`cbindgen`'s `clap`) require **edition2024 → rustc ≥ 1.85**. The base image
-already ships a working `stable` toolchain under `/usr/local/rustup`, which is
-sufficient; do not pin an older toolchain.
+`cbindgen`'s `clap`) require **edition2024 → rustc ≥ 1.85**. The base image's
+*default* rustup toolchain may be an **older** pinned rustc (e.g. `1.83.0`) with
+no `stable` toolchain installed. That default is too old: any root-level
+`cargo build --manifest-path cdoom-rust/Cargo.toml ...` (used in build step 1
+above and in `scripts/verify-baseline.sh`) fails with
+`feature 'edition2024' is required ... not stabilized in this version of Cargo`.
+`rustup` only honors `cdoom-rust/rust-toolchain.toml` when the cwd is inside
+`cdoom-rust/`, so the CMake cargo invocation (which cds into `cdoom-rust/`) is
+fine but root-level invocations are not. The startup update script therefore
+installs `stable` (≥ 1.85) if absent **and makes it the default** with
+`rustup default stable`, so cargo picks a new-enough toolchain everywhere.
 
-Do NOT run a bare `rustup toolchain install stable` at startup. The base
-toolchain lives in the read-only overlay lower layer, so whenever upstream
-publishes a newer stable, rustup attempts an in-place *upgrade* and dies while
-moving the old component out of the toolchain tree:
-`error: could not rename ... Invalid cross-device link (os error 18)` (EXDEV) —
-this is what made setup exit non-zero (`INSTALL_FAILED`). The already-installed
-`stable` still builds and tests the project after the rollback. The update
-script therefore installs stable only if absent:
+Do NOT run a bare `rustup toolchain install stable` unconditionally at startup.
+If a `stable` toolchain already lived in the read-only overlay lower layer,
+rustup would attempt an in-place *upgrade* whenever upstream publishes a newer
+stable and die moving the old component out of the tree:
+`error: could not rename ... Invalid cross-device link (os error 18)` (EXDEV),
+making setup exit non-zero (`INSTALL_FAILED`). The update script guards the
+install so it only runs when `stable` is missing:
 `rustup toolchain list | grep -q '^stable-' || rustup toolchain install stable --profile minimal`.
 
 ### Tests / verification
