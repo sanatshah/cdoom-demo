@@ -1,0 +1,41 @@
+---
+description: C ABI and FFI conventions for cdoom-core exports
+globs: cdoom-rust/cdoom-core/**
+alwaysApply: false
+---
+
+# Rust FFI Conventions
+
+All C-facing exports live in `cdoom-core/src/ffi.rs` and follow cbindgen rules in `cbindgen.toml`.
+
+## Naming and exports
+
+- Public C functions use `#[no_mangle] pub extern "C"` with the `cdoom_rust_` prefix (configured in cbindgen).
+- Return pointers to `'static` or process-lifetime data only — callers must not free them.
+- Document `# Safety` on every `unsafe` block and every function returning raw pointers.
+
+## Types
+
+- Use `std::os::raw` C types (`c_int`, `c_char`, etc.) at the boundary.
+- Set `usize_is_size_t = true` in cbindgen — do not use Rust `usize` in exported signatures.
+
+## Adding a new export
+
+1. Implement logic in a module under `cdoom-core/src/`.
+2. Add a thin wrapper in `ffi.rs`.
+3. Rebuild — cbindgen updates `include/cdoom_rust.h` automatically.
+4. Wire the C caller with `#ifdef USE_RUST_<MODULE>` dual-run until parity passes.
+
+```rust
+// ✅ GOOD — static lifetime, documented
+#[no_mangle]
+pub extern "C" fn cdoom_rust_version() -> *const c_char {
+    version_cstr().as_ptr()
+}
+
+// ❌ BAD — caller would use-after-free
+#[no_mangle]
+pub extern "C" fn cdoom_rust_version() -> *const c_char {
+    CString::new("1.0").unwrap().as_ptr()
+}
+```

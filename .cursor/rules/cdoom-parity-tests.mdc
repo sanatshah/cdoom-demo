@@ -1,0 +1,38 @@
+---
+description: Parity test requirements for Rust migration modules
+globs: cdoom-rust/**
+alwaysApply: false
+---
+
+# Parity Tests
+
+Every migrated module needs parity coverage in `cdoom-verify` **before** the CMake flag routes production code through Rust.
+
+## Structure
+
+- One file per module: `cdoom-verify/src/parity/<module>.rs`
+- Register the module in `cdoom-verify/src/parity/mod.rs`
+- Use `#[cfg(test)]` modules; run via `cargo test --workspace`
+
+## What to assert
+
+- **Identical outputs** for the same inputs as the C implementation (hashes, return values, edge cases).
+- **Deterministic behavior** — no hidden randomness or platform-dependent formatting unless the C code has it too.
+- **FFI round-trip** when the module is exported through `ffi.rs`.
+
+## Example pattern
+
+```rust
+#[test]
+fn fixed_mul_matches_c_reference() {
+    let cases = [(0x00010000, 0x00020000, 0x00020000), /* ... */];
+    for (a, b, expected) in cases {
+        assert_eq!(cdoom_core::fixed_mul(a, b), expected);
+    }
+}
+```
+
+## Do not
+
+- Flip a `USE_RUST_*` flag without parity tests landing first.
+- Assert on implementation details — assert on observable behavior matching C.
