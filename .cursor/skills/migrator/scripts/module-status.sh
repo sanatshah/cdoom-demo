@@ -32,6 +32,7 @@ MODULES=(
   "w_wad_cache|chocolate-doom/src/w_wad.c|cdoom-rust/cdoom-core/src/w/wad_cache.rs|USE_RUST_W_WAD_CACHE|4"
   "w_merge|chocolate-doom/src/w_merge.c|cdoom-rust/cdoom-core/src/w/merge.rs|USE_RUST_W_MERGE|4"
   "w_main|chocolate-doom/src/w_main.c|cdoom-rust/cdoom-core/src/w/main.rs|USE_RUST_W_MAIN|4"
+  "p_rejectpad|chocolate-doom/src/p_rejectpad.c|cdoom-rust/cdoom-core/src/p_rejectpad/mod.rs|USE_RUST_P_REJECTPAD|12"
 )
 
 has_rust() {
