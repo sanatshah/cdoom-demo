@@ -1,6 +1,6 @@
 ---
 name: migrator
-description: End-to-end Chocolate Doom C→Rust module migration using the strangler-fig loop. Use when porting a C file, starting a migration phase, or asking how to migrate a subsystem in cdoom-rust.
+description: End-to-end Chocolate Doom C→Rust module migration using the strangler-fig loop. Use when porting a C file, starting a migration phase, or asking how to migrate a subsystem in cdoom-rust. Lists unmigrated modules for selection or accepts a module name.
 ---
 
 # cdoom Module Migrator
@@ -12,11 +12,52 @@ Orchestrates one module port from `chocolate-doom/src/` into `cdoom-rust/`. Read
 - Repo builds: `./build.sh`
 - Rust workspace at `cdoom-rust/` (see [cdoom-rust/README.md](../../cdoom-rust/README.md))
 
+## Step 0 — Select module
+
+Every migration run targets **one module** from the registry. Two entry paths:
+
+### A. User passes a module name
+
+If the user names a module (e.g. "migrate m_fixed", "port sha1", "USE_RUST_M_BBOX"):
+
+1. Resolve the name to a registry `id` using the alias table in [modules.md](modules.md).
+2. Run status script to confirm it exists and show current status:
+   ```bash
+   .cursor/skills/migrator/scripts/module-status.sh
+   ```
+3. If the name doesn't match any registry entry, say so and offer the pending list (path B).
+4. If status is `cutover`, tell the user it's already routed through Rust and ask whether to continue cleanup or pick another module.
+5. Proceed to Step 1 with the resolved module.
+
+### B. No module specified — show choices
+
+When the user says "migrate a module", "what's next", "start migration", or similar without naming one:
+
+1. Run:
+   ```bash
+   .cursor/skills/migrator/scripts/module-status.sh --pending-only
+   ```
+2. Present **pending** and **in_progress** modules grouped by phase, showing `id`, C file, and status.
+3. Recommend the lowest-phase pending module whose dependencies are satisfied (see deps column in [modules.md](modules.md)).
+4. Use **AskQuestion** so the user picks one module. Include an "Other (type module name)" option.
+5. Proceed to Step 1 with the chosen module.
+
+### Registry reference
+
+Full module list, aliases, and deferred modules: [modules.md](modules.md)
+
+| Status | Meaning |
+|---|---|
+| `pending` | No Rust, parity, or dual-run work detected |
+| `in_progress` | Partial work (Rust and/or parity and/or shim) but not cut over |
+| `cutover` | `USE_RUST_*` flag active in CMake |
+
 ## Migration loop (do not skip steps)
 
 ```
 Task Progress:
-- [ ] 1. Select module and read C source
+- [ ] 0. Select module (above)
+- [ ] 1. Read C source for chosen module
 - [ ] 2. Implement Rust module in cdoom-core
 - [ ] 3. Export FFI wrappers (see ffi-bridge skill)
 - [ ] 4. Add C dual-run shim behind USE_RUST_<MODULE>
@@ -25,16 +66,17 @@ Task Progress:
 - [ ] 7. Flip CMake flag and delete C (only after step 6 passes)
 ```
 
-## Step 1 — Select and analyze
+## Step 1 — Analyze chosen module
 
-Pick a **leaf module** first (no heavy engine dependencies): math (`m_fixed`, `m_bbox`, `tables`), misc (`m_argv`, `m_misc`), crypto (`sha1`), WAD layer (`w_*`).
+Look up the module in [modules.md](modules.md) for C file path, Rust target, and CMake flag.
 
-For the chosen C file under `chocolate-doom/src/`:
+For the C file(s):
 
 1. List exported functions and globals.
 2. Note C types used (`fixed_t`, `byte`, `wad_file_t`, etc.) — mirror names in Rust.
 3. Identify side effects: `malloc`/`I_Realloc`, static mutable state, file I/O.
 4. Check `#include` graph — if it pulls in rendering or game logic, defer.
+5. Note anything marked "stays in C" in [MIGRATION.md](../../../MIGRATION.md) for this module (e.g. trig LUTs in `tables.c`).
 
 ## Step 2 — Implement in cdoom-core
 
@@ -112,15 +154,6 @@ cd cdoom-rust && cargo test --workspace
 2. Re-run full verification.
 3. Remove the C implementation and `#else` branch; keep the thin `#ifdef USE_RUST_*` include if other modules still dual-run.
 
-## Module priority (Phase 1 candidates)
-
-Already natural first targets based on dependency order:
-
-1. Math/tables — `m_fixed.c`, `m_bbox.c`, `tables.c`
-2. Misc/argv — `m_argv.c`, `m_misc.c`
-3. SHA1 — `sha1.c`
-4. WAD subsystem — `w_*.c` (depends on sha1 + file I/O)
-
 ## Anti-patterns
 
 - Hand-editing `cdoom-rust/include/cdoom_rust.h` (cbindgen owns it).
@@ -128,9 +161,23 @@ Already natural first targets based on dependency order:
 - Flipping `USE_RUST_*` before parity tests exist.
 - Large unrelated refactors in vendored `chocolate-doom/`.
 - Deleting C before timedemo baseline still passes.
+- Migrating a module not in the registry without updating [modules.md](modules.md) first.
 
 ## Related skills
 
 - **ffi-bridge** — C ABI, cbindgen, pointer safety
 - **parity-test** — cdoom-verify test patterns
 - **verify-baseline** — build oracle and timedemo gate
+
+## Related subagents
+
+Delegate isolated steps to project subagents in `.cursor/agents/`:
+
+| Step | Subagent | When to delegate |
+|---|---|---|
+| 1–2 | **rust-port** | Analyze C source and implement in `cdoom-core` |
+| 3–4 | **ffi-bridge** | Export `ffi.rs`, regenerate header, add C dual-run shims |
+| 5 | **parity-test** | Author and register `cdoom-verify` parity tests |
+| 6–7 | **verify-baseline** | Run `./scripts/verify-baseline.sh`, interpret failures, gate cutover |
+
+Example: `Use the rust-port subagent to port m_fixed.c`
