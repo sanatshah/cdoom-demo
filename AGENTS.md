@@ -25,22 +25,25 @@ On this VM, dependencies are installed by the startup update script, so skip
 
 ### Rust toolchain
 `cdoom-rust/rust-toolchain.toml` pins `channel = "stable"`. Build deps (e.g.
-`cbindgen`'s `clap`) require **edition2024 → rustc ≥ 1.85**. The base image
-already ships a working `stable` toolchain under `/usr/local/rustup`, which is
-sufficient; do not pin an older toolchain.
+`cbindgen`'s `clap`) require **edition2024 → rustc ≥ 1.85**. On this base image
+the default preinstalled toolchain is **1.83.0**, which is *too old* (a root
+`cargo build --manifest-path cdoom-rust/Cargo.toml ...` fails with
+`feature 'edition2024' is required`). The startup update script therefore
+installs a newer `stable` (currently 1.97.x) and runs `rustup default stable`
+so the documented root build command works from anywhere. Note that CMake
+already builds the Rust lib from inside `cdoom-rust/` (where the toolchain file
+pins `stable`), so the game build works regardless of the default.
 
-Do NOT run a bare `rustup toolchain install stable` at startup. The base
-toolchain lives in the read-only overlay lower layer, so whenever upstream
-publishes a newer stable, rustup attempts an in-place *upgrade* and dies while
-moving the old component out of the toolchain tree:
-`error: could not rename ... Invalid cross-device link (os error 18)` (EXDEV) —
-this is what made setup exit non-zero (`INSTALL_FAILED`). The already-installed
-`stable` still builds and tests the project after the rollback. The update
-script therefore installs stable only if absent:
+Do NOT run a bare `rustup toolchain install stable` unconditionally at startup.
+If a `stable-*` toolchain already exists in the read-only overlay lower layer,
+rustup attempts an in-place *upgrade* when upstream publishes a newer stable and
+dies while moving the old component out of the toolchain tree:
+`error: could not rename ... Invalid cross-device link (os error 18)` (EXDEV).
+The update script installs stable only if absent:
 `rustup toolchain list | grep -q '^stable-' || rustup toolchain install stable --profile minimal`.
 
 ### Tests / verification
-- Rust unit tests: `cd cdoom-rust && cargo test --workspace` (3 tests in `cdoom-verify`).
+- Rust unit tests: `cd cdoom-rust && cargo test --workspace` (7 tests in `cdoom-verify`).
 - Migration oracle: `./scripts/verify-baseline.sh` (Rust tests + FFI probe +
   `-cdoom-rust-info` + headless timedemo).
 - FFI smoke test: `./chocolate-doom/build/cdoom_rust_probe`.
@@ -49,7 +52,11 @@ script therefore installs stable only if absent:
 ### Running the game
 `./run.sh` launches the game with `wads/freedoom1.wad` (WADs already present, so
 its download path is skipped). GUI requires a display — a VNC desktop is available
-on `DISPLAY=:1`. Config/saves land in `~/.local/share/chocolate-doom/`.
+on `DISPLAY=:1`. Config/saves land in `~/.local/share/chocolate-doom/`. The VM
+has no audio device, so startup prints a burst of `ALSA lib ...` errors and
+`Error initialising SDL_mixer: ALSA: Couldn't open audio device`; this is
+harmless — the game still renders and is fully playable (pass
+`-nosound -nomusic` to silence it).
 
 ### Known caveat — headless timedemo does not self-exit
 `chocolate-doom ... -timedemo demo1 -nodraw -nosound -nomusic` runs the full
