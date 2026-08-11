@@ -19,6 +19,7 @@ Canonical list of migratable units. Status is computed at runtime by `scripts/mo
 | w_wad_cache | 4 | `chocolate-doom/src/w_wad.c` (cache) | `cdoom-core/src/w/wad_cache.rs` | `USE_RUST_W_WAD_CACHE` | w_wad |
 | w_merge | 4 | `chocolate-doom/src/w_merge.c` | `cdoom-core/src/w/merge.rs` | `USE_RUST_W_MERGE` | w_wad |
 | w_main | 4 | `chocolate-doom/src/w_main.c` | `cdoom-core/src/w/main.rs` | `USE_RUST_W_MAIN` | w_wad, w_merge |
+| v_video | 7 | `chocolate-doom/src/v_video.c`, `v_diskicon.c` | `cdoom-core/src/v_video/mod.rs` | `USE_RUST_V_VIDEO` | — |
 
 ## Name aliases
 
@@ -41,6 +42,7 @@ The migrator resolves these to `id`:
 | `w_wad_cache`, `USE_RUST_W_WAD_CACHE` | `w_wad_cache` |
 | `w_merge`, `w_merge.c`, `USE_RUST_W_MERGE` | `w_merge` |
 | `w_main`, `w_main.c`, `USE_RUST_W_MAIN` | `w_main` |
+| `v_video`, `v_video.c`, `v_diskicon`, `v_diskicon.c`, `USE_RUST_V_VIDEO`, `V_DrawPatch` | `v_video` |
 
 ## Deferred (not selectable yet)
 
@@ -48,7 +50,6 @@ These appear in [MIGRATION.md](../../../MIGRATION.md) but are not leaf-ready:
 
 - Phase 5: `z_zone.c`, `z_native.c`
 - Phase 6: `deh_*.c`
-- Phase 7: `v_video.c`, `v_diskicon.c`
 - Phase 8: `net_*.c`
 - Phase 9: `i_*.c` (most)
 - Phase 10: `p_*`, `r_*`, `g_*`, game logic

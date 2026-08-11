@@ -32,6 +32,7 @@ MODULES=(
   "w_wad_cache|chocolate-doom/src/w_wad.c|cdoom-rust/cdoom-core/src/w/wad_cache.rs|USE_RUST_W_WAD_CACHE|4"
   "w_merge|chocolate-doom/src/w_merge.c|cdoom-rust/cdoom-core/src/w/merge.rs|USE_RUST_W_MERGE|4"
   "w_main|chocolate-doom/src/w_main.c|cdoom-rust/cdoom-core/src/w/main.rs|USE_RUST_W_MAIN|4"
+  "v_video|chocolate-doom/src/v_video.c|cdoom-rust/cdoom-core/src/v_video/mod.rs|USE_RUST_V_VIDEO|7"
 )
 
 has_rust() {
