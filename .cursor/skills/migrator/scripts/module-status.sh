@@ -23,6 +23,7 @@ MODULES=(
   "m_random|chocolate-doom/src/doom/m_random.c|cdoom-rust/cdoom-core/src/random.rs|USE_RUST_M_RANDOM|1"
   "sha1|chocolate-doom/src/sha1.c|cdoom-rust/cdoom-core/src/sha1.rs|USE_RUST_SHA1|2"
   "m_argv|chocolate-doom/src/m_argv.c|cdoom-rust/cdoom-core/src/m_argv.rs|USE_RUST_M_ARGV|3"
+  "m_cheat|chocolate-doom/src/m_cheat.c|cdoom-rust/cdoom-core/src/m_cheat.rs|USE_RUST_M_CHEAT|3"
   "m_misc|chocolate-doom/src/m_misc.c|cdoom-rust/cdoom-core/src/m_misc.rs|USE_RUST_M_MISC|3"
   "w_lump_hash|chocolate-doom/src/w_wad.c|cdoom-rust/cdoom-core/src/w/lump_hash.rs|USE_RUST_W_LUMP_NAME_HASH|4"
   "w_checksum|chocolate-doom/src/w_checksum.c|cdoom-rust/cdoom-core/src/w/checksum.rs|USE_RUST_W_CHECKSUM|4"

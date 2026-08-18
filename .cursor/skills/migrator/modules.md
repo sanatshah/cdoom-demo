@@ -10,6 +10,7 @@ Canonical list of migratable units. Status is computed at runtime by `scripts/mo
 | m_random | 1 | `chocolate-doom/src/doom/m_random.c`, `heretic/m_random.c`, `hexen/m_random.c`, `strife/m_random.c` | `cdoom-core/src/random.rs` | `USE_RUST_M_RANDOM` | — |
 | sha1 | 2 | `chocolate-doom/src/sha1.c` | `cdoom-core/src/sha1.rs` | `USE_RUST_SHA1` | — |
 | m_argv | 3 | `chocolate-doom/src/m_argv.c` | `cdoom-core/src/m_argv.rs` | `USE_RUST_M_ARGV` | phase 1 |
+| m_cheat | 3 | `chocolate-doom/src/m_cheat.c` | `cdoom-core/src/m_cheat.rs` | `USE_RUST_M_CHEAT` | phase 1 |
 | m_misc | 3 | `chocolate-doom/src/m_misc.c` | `cdoom-core/src/m_misc.rs` | `USE_RUST_M_MISC` | phase 1 |
 | w_lump_hash | 4 | `chocolate-doom/src/w_wad.c` (hash) | `cdoom-core/src/w/lump_hash.rs` | `USE_RUST_W_LUMP_NAME_HASH` | sha1, m_argv, m_misc |
 | w_checksum | 4 | `chocolate-doom/src/w_checksum.c` | `cdoom-core/src/w/checksum.rs` | `USE_RUST_W_CHECKSUM` | sha1 |
@@ -32,6 +33,7 @@ The migrator resolves these to `id`:
 | `m_random`, `m_random.c`, `USE_RUST_M_RANDOM`, `random` | `m_random` |
 | `sha1`, `sha1.c`, `USE_RUST_SHA1` | `sha1` |
 | `m_argv`, `m_argv.c`, `USE_RUST_M_ARGV` | `m_argv` |
+| `m_cheat`, `m_cheat.c`, `USE_RUST_M_CHEAT` | `m_cheat` |
 | `m_misc`, `m_misc.c`, `USE_RUST_M_MISC` | `m_misc` |
 | `w_lump_hash`, `lump_hash`, `USE_RUST_W_LUMP_NAME_HASH` | `w_lump_hash` |
 | `w_checksum`, `w_checksum.c`, `USE_RUST_W_CHECKSUM` | `w_checksum` |
@@ -52,5 +54,5 @@ These appear in [MIGRATION.md](../../../MIGRATION.md) but are not leaf-ready:
 - Phase 8: `net_*.c`
 - Phase 9: `i_*.c` (most)
 - Phase 10: `p_*`, `r_*`, `g_*`, game logic
-- Phase 3 deferred: `m_cheat.c`, `m_controls.c`, `m_config.c`
+- Phase 3 deferred: `m_controls.c`, `m_config.c`
 - Stays in C: trig LUTs in `tables.c`, RNG index globals, mmap backends
