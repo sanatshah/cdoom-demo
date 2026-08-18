@@ -1,7 +1,9 @@
 //! Shared verification helpers for migration phases.
 //!
-//! Each new Rust module should add parity checks here (or as integration tests)
+//! Each new Rust module should add parity checks under [`parity`]
 //! before flipping the CMake feature flag that routes production code through Rust.
+
+mod parity;
 
 use std::ffi::CStr;
 use std::path::Path;
