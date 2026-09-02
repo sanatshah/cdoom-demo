@@ -19,6 +19,7 @@ Canonical list of migratable units. Status is computed at runtime by `scripts/mo
 | w_wad_cache | 4 | `chocolate-doom/src/w_wad.c` (cache) | `cdoom-core/src/w/wad_cache.rs` | `USE_RUST_W_WAD_CACHE` | w_wad |
 | w_merge | 4 | `chocolate-doom/src/w_merge.c` | `cdoom-core/src/w/merge.rs` | `USE_RUST_W_MERGE` | w_wad |
 | w_main | 4 | `chocolate-doom/src/w_main.c` | `cdoom-core/src/w/main.rs` | `USE_RUST_W_MAIN` | w_wad, w_merge |
+| p_rejectpad | 12 | `chocolate-doom/src/p_rejectpad.c` | `cdoom-core/src/p_rejectpad/mod.rs` | `USE_RUST_P_REJECTPAD` | — |
 
 ## Name aliases
 
@@ -41,6 +42,7 @@ The migrator resolves these to `id`:
 | `w_wad_cache`, `USE_RUST_W_WAD_CACHE` | `w_wad_cache` |
 | `w_merge`, `w_merge.c`, `USE_RUST_W_MERGE` | `w_merge` |
 | `w_main`, `w_main.c`, `USE_RUST_W_MAIN` | `w_main` |
+| `p_rejectpad`, `p_rejectpad.c`, `USE_RUST_P_REJECTPAD`, `PadRejectArray`, `rejectpad` | `p_rejectpad` |
 
 ## Deferred (not selectable yet)
 
