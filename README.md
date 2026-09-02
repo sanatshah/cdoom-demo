@@ -20,6 +20,14 @@ Local [Chocolate Doom](https://github.com/chocolate-doom/chocolate-doom) setup b
 ./run.sh -iwad wads/freedoom2.wad
 ```
 
+## Custom map (E1M1 PWAD)
+
+`wads/custom.wad` replaces episode 1 map 1: start room, door, hall, then an outdoor arena with an exit switch on the north wall. Rebuild it with `python3 tools/make_custom_map.py`.
+
+```bash
+./run-custom.sh
+```
+
 ## Controls
 
 | Key | Action |
