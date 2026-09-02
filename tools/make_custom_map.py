@@ -206,7 +206,7 @@ def build_geometry() -> MapBuilder:
         y_door0,
         x_door1,
         y_door0,
-        ML_BLOCKING | ML_TWOSIDED | ML_DONTPEGTOP,
+        ML_TWOSIDED | ML_DONTPEGTOP,
         start,
         back_sec=door,
         special=1,
@@ -220,13 +220,13 @@ def build_geometry() -> MapBuilder:
     m.wall(x_door0, y_door0, x_door0, y_door1, door, "DOORTRAK")
     m.wall(x_door1, y_door1, x_door1, y_door0, door, "DOORTRAK")
     m.line(
-        x_door0,
-        y_door1,
         x_door1,
         y_door1,
-        ML_BLOCKING | ML_TWOSIDED | ML_DONTPEGTOP,
-        door,
-        back_sec=hall,
+        x_door0,
+        y_door1,
+        ML_TWOSIDED | ML_DONTPEGTOP,
+        hall,
+        back_sec=door,
         special=1,
         front_top="BIGDOOR2",
         back_top="BIGDOOR2",
@@ -242,6 +242,7 @@ def build_geometry() -> MapBuilder:
         ML_TWOSIDED,
         hall,
         back_sec=arena,
+        back_top="STONE2",
     )
 
     m.wall(x_door0, y_hall1, x0, y_hall1, arena, "STONE2")
