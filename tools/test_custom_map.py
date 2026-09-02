@@ -48,7 +48,7 @@ def main() -> None:
     things = next(t for t in lumps(data) if t[0] == "THINGS")
     x, y, ang, typ, flags = struct.unpack_from("<hhhhh", data, things[1])
     assert typ == 1, typ
-    assert (x, y, ang) == (320, 192, 90)
+    assert (x, y, ang) == (320, 168, 90)
     assert flags == 7
     assert stats["sectors"] == 4
     assert stats["linedefs"] == 20

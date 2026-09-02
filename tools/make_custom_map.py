@@ -188,20 +188,24 @@ class MapBuilder:
 
 
 def build_geometry() -> MapBuilder:
-    m = MapBuilder()
-    start = m.sector(0, 128, "FLOOR4_8", "CEIL3_5", 160, aabb=(0, 0, 640, 384))
-    door = m.sector(0, 0, "FLOOR4_8", "CEIL3_5", 144, aabb=(256, 384, 384, 400))
-    hall = m.sector(0, 128, "FLAT5_4", "CEIL3_5", 120, aabb=(256, 400, 384, 640))
-    arena = m.sector(0, 256, "GRASS1", "F_SKY1", 192, aabb=(0, 640, 768, 1152))
+    # Keep the start room shallow so the door is inside vanilla use-range
+    # (64 map units) after a short walk north.
+    y0, y_door0, y_door1, y_hall1, y_arena1 = 0, 224, 240, 512, 1024
+    x0, x_door0, x_door1, x_start1, x_arena1 = 0, 256, 384, 640, 768
 
-    # Start room — interior on the right.
-    m.wall(0, 0, 0, 384, start, "STARTAN2")
-    m.wall(0, 384, 256, 384, start, "STARTAN2")
+    m = MapBuilder()
+    start = m.sector(0, 128, "FLOOR4_8", "CEIL3_5", 160, aabb=(x0, y0, x_start1, y_door0))
+    door = m.sector(0, 0, "FLOOR4_8", "CEIL3_5", 144, aabb=(x_door0, y_door0, x_door1, y_door1))
+    hall = m.sector(0, 128, "FLAT5_4", "CEIL3_5", 120, aabb=(x_door0, y_door1, x_door1, y_hall1))
+    arena = m.sector(0, 256, "GRASS1", "F_SKY1", 192, aabb=(x0, y_hall1, x_arena1, y_arena1))
+
+    m.wall(x0, y0, x0, y_door0, start, "STARTAN2")
+    m.wall(x0, y_door0, x_door0, y_door0, start, "STARTAN2")
     m.line(
-        256,
-        384,
-        384,
-        384,
+        x_door0,
+        y_door0,
+        x_door1,
+        y_door0,
         ML_BLOCKING | ML_TWOSIDED | ML_DONTPEGTOP,
         start,
         back_sec=door,
@@ -209,18 +213,17 @@ def build_geometry() -> MapBuilder:
         front_top="BIGDOOR2",
         back_top="BIGDOOR2",
     )
-    m.wall(384, 384, 640, 384, start, "STARTAN2")
-    m.wall(640, 384, 640, 0, start, "STARTAN2")
-    m.wall(640, 0, 0, 0, start, "STARTAN2")
+    m.wall(x_door1, y_door0, x_start1, y_door0, start, "STARTAN2")
+    m.wall(x_start1, y_door0, x_start1, y0, start, "STARTAN2")
+    m.wall(x_start1, y0, x0, y0, start, "STARTAN2")
 
-    # Door tracks + north leaf.
-    m.wall(256, 384, 256, 400, door, "DOORTRAK")
-    m.wall(384, 400, 384, 384, door, "DOORTRAK")
+    m.wall(x_door0, y_door0, x_door0, y_door1, door, "DOORTRAK")
+    m.wall(x_door1, y_door1, x_door1, y_door0, door, "DOORTRAK")
     m.line(
-        256,
-        400,
-        384,
-        400,
+        x_door0,
+        y_door1,
+        x_door1,
+        y_door1,
         ML_BLOCKING | ML_TWOSIDED | ML_DONTPEGTOP,
         door,
         back_sec=hall,
@@ -229,43 +232,41 @@ def build_geometry() -> MapBuilder:
         back_top="BIGDOOR2",
     )
 
-    # Hall.
-    m.wall(256, 400, 256, 640, hall, "BROWN1")
-    m.wall(384, 640, 384, 400, hall, "BROWN1")
+    m.wall(x_door0, y_door1, x_door0, y_hall1, hall, "BROWN1")
+    m.wall(x_door1, y_hall1, x_door1, y_door1, hall, "BROWN1")
     m.line(
-        256,
-        640,
-        384,
-        640,
+        x_door0,
+        y_hall1,
+        x_door1,
+        y_hall1,
         ML_TWOSIDED,
         hall,
         back_sec=arena,
     )
 
-    # Arena.
-    m.wall(256, 640, 0, 640, arena, "STONE2")
-    m.wall(0, 640, 0, 1152, arena, "STONE2")
-    m.wall(0, 1152, 320, 1152, arena, "STONE2")
-    m.wall(320, 1152, 384, 1152, arena, "SW1EXIT", special=11)
-    m.wall(384, 1152, 512, 1152, arena, "EXITSIGN")
-    m.wall(512, 1152, 768, 1152, arena, "STONE2")
-    m.wall(768, 1152, 768, 640, arena, "STONE2")
-    m.wall(768, 640, 384, 640, arena, "STONE2")
+    m.wall(x_door0, y_hall1, x0, y_hall1, arena, "STONE2")
+    m.wall(x0, y_hall1, x0, y_arena1, arena, "STONE2")
+    m.wall(x0, y_arena1, 320, y_arena1, arena, "STONE2")
+    m.wall(320, y_arena1, 384, y_arena1, arena, "SW1EXIT", special=11)
+    m.wall(384, y_arena1, 512, y_arena1, arena, "EXITSIGN")
+    m.wall(512, y_arena1, x_arena1, y_arena1, arena, "STONE2")
+    m.wall(x_arena1, y_arena1, x_arena1, y_hall1, arena, "STONE2")
+    m.wall(x_arena1, y_hall1, x_door1, y_hall1, arena, "STONE2")
 
-    m.thing(320, 192, 90, PLAYER1)
+    m.thing(320, 168, 90, PLAYER1)
     m.thing(96, 96, 0, SHOTGUN)
     m.thing(96, 128, 0, CLIP)
     m.thing(544, 96, 0, STIMPACK)
-    m.thing(320, 480, 90, HEALTH_BONUS)
-    m.thing(320, 520, 90, ARMOR_BONUS)
-    m.thing(96, 800, 0, ZOMBIEMAN)
-    m.thing(160, 960, 180, ZOMBIEMAN)
-    m.thing(672, 800, 180, SHOTGUN_GUY)
-    m.thing(600, 1000, 225, IMP)
-    m.thing(120, 1080, 270, IMP)
-    m.thing(480, 880, 0, BARREL)
-    m.thing(420, 1088, 90, HEALTH_BONUS)
-    m.thing(448, 1088, 90, ARMOR_BONUS)
+    m.thing(320, 320, 90, HEALTH_BONUS)
+    m.thing(320, 360, 90, ARMOR_BONUS)
+    m.thing(96, 640, 0, ZOMBIEMAN)
+    m.thing(160, 800, 180, ZOMBIEMAN)
+    m.thing(672, 640, 180, SHOTGUN_GUY)
+    m.thing(600, 880, 225, IMP)
+    m.thing(120, 960, 270, IMP)
+    m.thing(480, 720, 0, BARREL)
+    m.thing(420, 960, 90, HEALTH_BONUS)
+    m.thing(448, 960, 90, ARMOR_BONUS)
     return m
 
 
@@ -342,9 +343,9 @@ def build_nodes_postorder(m: MapBuilder) -> bytes:
             + u16(c1)
         )
 
-    n0 = node(640, NF_SUBSECTOR | 2, NF_SUBSECTOR | 3, hall_aabb, arena_aabb)
-    n1 = node(400, NF_SUBSECTOR | 1, 0, door_aabb, rest_after_door)
-    n2 = node(384, NF_SUBSECTOR | 0, 1, start_aabb, rest_after_start)
+    n0 = node(hall_aabb[3], NF_SUBSECTOR | 2, NF_SUBSECTOR | 3, hall_aabb, arena_aabb)
+    n1 = node(door_aabb[3], NF_SUBSECTOR | 1, 0, door_aabb, rest_after_door)
+    n2 = node(start_aabb[3], NF_SUBSECTOR | 0, 1, start_aabb, rest_after_start)
     return n0 + n1 + n2
 
 
