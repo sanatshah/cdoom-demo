@@ -32,6 +32,7 @@ MODULES=(
   "w_wad_cache|chocolate-doom/src/w_wad.c|cdoom-rust/cdoom-core/src/w/wad_cache.rs|USE_RUST_W_WAD_CACHE|4"
   "w_merge|chocolate-doom/src/w_merge.c|cdoom-rust/cdoom-core/src/w/merge.rs|USE_RUST_W_MERGE|4"
   "w_main|chocolate-doom/src/w_main.c|cdoom-rust/cdoom-core/src/w/main.rs|USE_RUST_W_MAIN|4"
+  "deh_main|chocolate-doom/src/deh_main.c|cdoom-rust/cdoom-core/src/deh/mod.rs|USE_RUST_DEH_MAIN|8"
 )
 
 has_rust() {
@@ -42,9 +43,16 @@ has_rust() {
 has_parity() {
   local id="$1"
   local parity_dir="cdoom-rust/cdoom-verify/src/parity"
-  [[ -d "$parity_dir" ]] || return 1
-  ls "$parity_dir"/*.rs 2>/dev/null | grep -qiE "${id}|${id//_/.}|math_parity|random_parity" && return 0
-  grep -rq "$id" "$parity_dir" 2>/dev/null
+  if [[ -d "$parity_dir" ]]; then
+    ls "$parity_dir"/*.rs 2>/dev/null | grep -qiE "${id}|${id//_/.}|math_parity|random_parity" && return 0
+    grep -rq "$id" "$parity_dir" 2>/dev/null && return 0
+  fi
+  # Phase 8 Dehacked parity currently lives in cdoom-verify/src/lib.rs
+  if [[ "$id" == "deh_main" ]]; then
+    grep -q "deh_assignment_parser\|cdoom_rust_deh_" \
+      "cdoom-rust/cdoom-verify/src/lib.rs" 2>/dev/null && return 0
+  fi
+  return 1
 }
 
 has_shim() {

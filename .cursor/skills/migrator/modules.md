@@ -19,6 +19,7 @@ Canonical list of migratable units. Status is computed at runtime by `scripts/mo
 | w_wad_cache | 4 | `chocolate-doom/src/w_wad.c` (cache) | `cdoom-core/src/w/wad_cache.rs` | `USE_RUST_W_WAD_CACHE` | w_wad |
 | w_merge | 4 | `chocolate-doom/src/w_merge.c` | `cdoom-core/src/w/merge.rs` | `USE_RUST_W_MERGE` | w_wad |
 | w_main | 4 | `chocolate-doom/src/w_main.c` | `cdoom-core/src/w/main.rs` | `USE_RUST_W_MAIN` | w_wad, w_merge |
+| deh_main | 8 | `chocolate-doom/src/deh_main.c`, `deh_io.c`, `deh_str.c`, `deh_text.c`, `deh_mapping.c` | `cdoom-core/src/deh/mod.rs` | `USE_RUST_DEH_MAIN` | — |
 
 ## Name aliases
 
@@ -41,13 +42,14 @@ The migrator resolves these to `id`:
 | `w_wad_cache`, `USE_RUST_W_WAD_CACHE` | `w_wad_cache` |
 | `w_merge`, `w_merge.c`, `USE_RUST_W_MERGE` | `w_merge` |
 | `w_main`, `w_main.c`, `USE_RUST_W_MAIN` | `w_main` |
+| `deh_main`, `deh_*`, `deh`, `USE_RUST_DEH_MAIN`, `dehacked` | `deh_main` |
 
 ## Deferred (not selectable yet)
 
 These appear in [MIGRATION.md](../../../MIGRATION.md) but are not leaf-ready:
 
 - Phase 5: `z_zone.c`, `z_native.c`
-- Phase 6: `deh_*.c`
+- Phase 6 shared Dehacked: game-specific `doom/deh_*.c` hooks (ammo/weapon/…) stay in C
 - Phase 7: `v_video.c`, `v_diskicon.c`
 - Phase 8: `net_*.c`
 - Phase 9: `i_*.c` (most)
