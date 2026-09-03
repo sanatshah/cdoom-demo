@@ -1,0 +1,4 @@
+{
+  "name": "cdoom (Chocolate Doom + Rust)",
+  "install": "bash .cursor/install.sh"
+}
